@@ -4,3 +4,7 @@
 # for params
 scripts/config/**/*.yaml
 !scripts/config/**/defaults.yaml
+
+# for model
+scripts/model/*
+!scripts/model/.gitkeep
