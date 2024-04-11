@@ -1,0 +1,6 @@
+# for pycache
+*.pyc
+
+# for params
+scripts/config/**/*.yaml
+!scripts/config/**/defaults.yaml
