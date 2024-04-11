@@ -12,6 +12,6 @@ posture_random: False
 save_anim_num: 10
 device: cuda
 
-basename: SAC_trainedDCAE_cl2_o-${rl.obs_dim}_a-${rl.act_dim}
+basename: SAC_trainedDCAE_o-${rl.obs_dim}_a-${rl.act_dim}
 
 fe_with_init: True
