@@ -98,3 +98,7 @@ class Executer:
         # (N, T, C, H, W)にself.rgb_imgsとself.depth_imgsを変換してadd_video
         self.writer.flush()
         self.writer.close()
+    
+    def __call__(self):
+        self.main_loop()
+        self.close()
