@@ -71,13 +71,13 @@ class Executer:
         # unscale
         pos_ctrl, rot_ctrl = action[:3], action[3:]
         pos_ctrl *= 0.05 * 100 # mm
-        rot_ctrl *= np.deg2rad(10) # deg
+        rot_ctrl *= np.deg2rad(10) # rad
         
         # 目標の計算
         pos_cur, rot_cur = robot_state[:3], np.deg2rad(robot_state[3:])
         pos_target = pos_cur + pos_ctrl
         mat_target = rot.add_rot_mat(rot.euler2mat(rot_cur), rot.add_rot_mat(rot_ctrl))
-        rot_target = np.rad2deg(rot.mat2euler(mat_target))
+        rot_target = np.rad2deg(rot.mat2euler(mat_target)) # deg
         target = np.concatenate(pos_target, rot_target)
         
         # 指令の送信
