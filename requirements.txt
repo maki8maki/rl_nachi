@@ -1,0 +1,15 @@
+gymnasium==0.29.1
+matplotlib
+numpy
+torch
+torchvision
+tensorflow
+hydra-core
+dacite
+omegaconf
+opencv-python
+PyOpenGL-accelerate
+torch-tb-profiler
+dill
+imageio
+PyQt6
