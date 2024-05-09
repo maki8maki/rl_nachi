@@ -1,31 +1,37 @@
 import dataclasses
+from copy import deepcopy
+
+import dacite
+import hydra
 import torch
 import torch.nn as nn
 from absl import logging
-from copy import deepcopy
-import hydra
-from omegaconf import OmegaConf
-import dacite
-
 from agents import utils
 from agents.DCAE import DCAE
 from agents.SAC import SAC
+from omegaconf import OmegaConf
+
 
 @dataclasses.dataclass
 class FEConfig:
     img_width: int = 108
     img_height: int = 72
-    img_channel : int = 4
+    img_channel: int = 4
     hidden_dim: int = 20
-    model_name: str = ''
+    model_name: str = ""
     _model: dataclasses.InitVar[dict] = None
     model: utils.FE = dataclasses.field(default=None)
     _trans: dataclasses.InitVar[dict] = None
     trans: nn.Module = dataclasses.field(default=None, repr=False)
-    
+
     def __post_init__(self, _model, _trans):
         if _model is None:
-            self.model = DCAE(img_height=self.img_height, img_width=self.img_width, img_channel=self.img_channel, hidden_dim=self.hidden_dim)
+            self.model = DCAE(
+                img_height=self.img_height,
+                img_width=self.img_width,
+                img_channel=self.img_channel,
+                hidden_dim=self.hidden_dim,
+            )
         if _trans is None:
             self.trans = utils.MyTrans(img_width=self.img_width, img_height=self.img_height)
 
@@ -37,13 +43,14 @@ class FEConfig:
             self_copy.trans = hydra.utils.instantiate(_cfg._trans)
         return self_copy
 
+
 @dataclasses.dataclass
 class RLConfig:
     obs_dim: int = 6
     act_dim: int = 6
     _model: dataclasses.InitVar[dict] = None
     model: utils.RL = dataclasses.field(default=None)
-    
+
     def __post_init__(self, _model):
         if _model is None:
             self.model = SAC(obs_dim=self.obs_dim, act_dim=self.act_dim)
@@ -54,6 +61,7 @@ class RLConfig:
             self_copy.model = hydra.utils.instantiate(_cfg._model)
         return self_copy
 
+
 @dataclasses.dataclass
 class CombConfig:
     fe: FEConfig
@@ -62,34 +70,34 @@ class CombConfig:
     position_random: bool = False
     posture_random: bool = False
     save_anim_num: int = dataclasses.field(default=10, repr=False)
-    device: str = 'cpu'
+    device: str = "cpu"
     fe_with_init: dataclasses.InitVar[bool] = True
     output_dir: str = dataclasses.field(default=None)
-    
+
     def __post_init__(self, fe_with_init):
-        if self.device == 'cpu':
-            logging.warning('You are using CPU!!')
-        if self.device=='cuda' and not torch.cuda.is_available():
-            self.device = 'cpu'
-            logging.warning('Device changed to CPU!!')
+        if self.device == "cpu":
+            logging.warning("You are using CPU!!")
+        if self.device == "cuda" and not torch.cuda.is_available():
+            self.device = "cpu"
+            logging.warning("Device changed to CPU!!")
         if self.fe.model is not None:
             self.fe.model.to(self.device)
         if self.rl.model is not None:
             self.rl.model.to(self.device)
         if fe_with_init:
-            init = 'w-init'
+            init = "w-init"
         else:
-            init = 'wo-init'
+            init = "wo-init"
         if self.position_random:
-            position_random = 'r'
+            position_random = "r"
         else:
-            position_random = 's'
+            position_random = "s"
         if self.posture_random:
-            posture_random = 'r'
+            posture_random = "r"
         else:
-            posture_random = 's'
-        self.buffer_name = f'buffer_o-{self.rl.obs_dim}_a-{self.rl.act_dim}_{position_random}{posture_random}_w-hs_{self.memory_size}.pcl'
-        self.fe.model_name = self.fe.model_name.replace('.pth', f'_{position_random}{posture_random}_{init}.pth')
+            posture_random = "s"
+        self.buffer_name = f"buffer_o-{self.rl.obs_dim}_a-{self.rl.act_dim}_{position_random}{posture_random}_w-hs_{self.memory_size}.pcl"  # noqa: E501
+        self.fe.model_name = self.fe.model_name.replace(".pth", f"_{position_random}{posture_random}_{init}.pth")
         self.output_dir = hydra.core.hydra_config.HydraConfig.get().runtime.output_dir
 
     @classmethod
@@ -101,5 +109,5 @@ class CombConfig:
         cfg.rl = cfg.rl.convert(OmegaConf.create(_cfg.rl))
         cfg.fe.model.to(cfg.device)
         cfg.rl.model.to(cfg.device)
-        cfg.basename = _cfg.basename + ('_r' if cfg.position_random else '_s') + ('r' if cfg.posture_random else 's')
+        cfg.basename = _cfg.basename + ("_r" if cfg.position_random else "_s") + ("r" if cfg.posture_random else "s")
         return cfg
