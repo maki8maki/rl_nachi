@@ -13,3 +13,13 @@ torch-tb-profiler
 dill
 imageio
 PyQt6
+
+# For ROS
+trollius
+rosdep
+rosinstall-generator
+wstool
+rosinstall
+defusedxml
+netifaces
+setuptools
