@@ -8,3 +8,7 @@ scripts/config/**/*.yaml
 # for model
 scripts/model/*
 !scripts/model/.gitkeep
+
+# for urdf
+*.dae
+*.stl

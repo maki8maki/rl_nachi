@@ -1,0 +1,268 @@
+<?xml version="1.0" ?>
+<robot name="mz04">
+    <link name="base_link">
+        <visual>
+            <origin rpy="0.0 0 0" xyz="0 0 0" />
+            <geometry>
+                <mesh filename="package://rl_nachi/urdf/mz04/MZ04-01_BASE.dae" />
+            </geometry>
+        </visual>
+        <collision>
+            <geometry>
+                <mesh filename="package://rl_nachi/urdf/mz04/MZ04-01_BASE.stl" />
+            </geometry>
+        </collision>
+        <inertial>
+            <mass value="0.1" />
+            <origin xyz="0 0 0" rpy="0 0 0" />
+            <inertia ixx="0.03" iyy="0.03" izz="0.03" ixy="0.0" ixz="0.0" iyz="0.0" />
+        </inertial>
+    </link>
+    <link name="J1_link">
+        <visual>
+            <origin rpy="0.0 0 0" xyz="0 0 -0.340" />
+            <geometry>
+                <mesh filename="package://rl_nachi/urdf/mz04/MZ04-01_J1.dae" />
+            </geometry>
+        </visual>
+        <collision>
+            <geometry>
+                <mesh filename="package://rl_nachi/urdf/mz04/MZ04-01_J1.stl" />
+            </geometry>
+        </collision>
+        <inertial>
+            <mass value="0.1" />
+            <origin xyz="0 0 0" rpy="0 0 0" />
+            <inertia ixx="0.03" iyy="0.03" izz="0.03" ixy="0.0" ixz="0.0" iyz="0.0" />
+        </inertial>
+    </link>
+    <joint name="J1_joint" type="revolute">
+        <origin rpy="0 0 0" xyz="0 0 0.340" />
+        <axis xyz="0 0 1" />
+        <limit effort="100.0" lower="-3.14" upper="3.14" velocity="0.5" />
+        <parent link="base_link" />
+        <child link="J1_link" />
+    </joint>
+    <link name="J2_link">
+        <visual>
+            <origin rpy="-1.57079633 0 -1.57079633" xyz="-0.340 0.0 0" />
+            <geometry>
+                <mesh filename="package://rl_nachi/urdf/mz04/MZ04-01_J2.dae" />
+            </geometry>
+        </visual>
+        <collision>
+            <geometry>
+                <mesh filename="package://rl_nachi/urdf/mz04/MZ04-01_J2.stl" />
+            </geometry>
+        </collision>
+        <inertial>
+            <mass value="0.1" />
+            <origin xyz="0 0 0" rpy="0 0 0" />
+            <inertia ixx="0.03" iyy="0.03" izz="0.03" ixy="0.0" ixz="0.0" iyz="0.0" />
+        </inertial>
+    </link>
+    <joint name="J2_joint" type="revolute">
+        <!--origin rpy="1.57079633 -1.57079633 0" xyz="0.0 0 0.0" /-->
+        <origin rpy="1.57079633 0 0" xyz="0.0 0 0.0" />
+        <axis xyz="0 0 1" />
+        <limit effort="100.0" lower="-3.14" upper="3.14" velocity="0.5" />
+        <parent link="J1_link" />
+        <child link="J2_link" />
+    </joint>
+    <link name="J3_link">
+        <visual>
+            <origin rpy="-1.57079633 0 -1.57079633" xyz="-0.6 0.0 0" />
+            <geometry>
+                <mesh filename="package://rl_nachi/urdf/mz04/MZ04-01_J3.dae" />
+            </geometry>
+        </visual>
+        <collision>
+            <geometry>
+                <mesh filename="package://rl_nachi/urdf/mz04/MZ04-01_J3.stl" />
+            </geometry>
+        </collision>
+        <inertial>
+            <mass value="0.1" />
+            <origin xyz="0 0 0" rpy="0 0 0" />
+            <inertia ixx="0.03" iyy="0.03" izz="0.03" ixy="0.0" ixz="0.0" iyz="0.0" />
+        </inertial>
+    </link>
+    <joint name="J3_joint" type="revolute">
+        <origin rpy="0 0 0" xyz="0.260 0 0.0" />
+        <axis xyz="0 0 1" />
+        <limit effort="100.0" lower="-3.14" upper="3.14" velocity="0.5" />
+        <parent link="J2_link" />
+        <child link="J3_link" />
+    </joint>
+    <link name="J4_link">
+        <visual>
+            <origin rpy="0 -1.57079633 3.14159266" xyz="-0.625 0.0 -0.28" />
+            <geometry>
+                <mesh filename="package://rl_nachi/urdf/mz04/MZ04-01_J4.dae" />
+            </geometry>
+        </visual>
+        <collision>
+            <geometry>
+                <mesh filename="package://rl_nachi/urdf/mz04/MZ04-01_J4.stl" />
+            </geometry>
+        </collision>
+        <inertial>
+            <mass value="0.1" />
+            <origin xyz="0 0 0" rpy="0 0 0" />
+            <inertia ixx="0.03" iyy="0.03" izz="0.03" ixy="0.0" ixz="0.0" iyz="0.0" />
+        </inertial>
+    </link>
+    <joint name="J4_joint" type="revolute">
+        <origin rpy="1.57079633 0 0" xyz="0.025 -0.28 0.0" />
+        <axis xyz="0 0 1" />
+        <limit effort="100.0" lower="-3.14" upper="3.14" velocity="0.5" />
+        <parent link="J3_link" />
+        <child link="J4_link" />
+    </joint>
+    <link name="J5_link">
+        <visual>
+            <origin rpy="-1.57079633 0 -1.57079633" xyz="-0.625 0.28 -0.0" />
+            <geometry>
+                <mesh filename="package://rl_nachi/urdf/mz04/MZ04-01_J5.dae" />
+            </geometry>
+        </visual>
+        <collision>
+            <geometry>
+                <mesh filename="package://rl_nachi/urdf/mz04/MZ04-01_J5.stl" />
+            </geometry>
+        </collision>
+        <inertial>
+            <mass value="0.1" />
+            <origin xyz="0 0 0" rpy="0 0 0" />
+            <inertia ixx="0.03" iyy="0.03" izz="0.03" ixy="0.0" ixz="0.0" iyz="0.0" />
+        </inertial>
+    </link>
+    <joint name="J5_joint" type="revolute">
+        <origin rpy="-1.57079633 0 0" xyz="0 0 0" />
+        <axis xyz="0 0 1" />
+        <limit effort="100.0" lower="-3.14" upper="3.14" velocity="0.5" />
+        <parent link="J4_link" />
+        <child link="J5_link" />
+    </joint>
+    <link name="J6_link">
+        <visual>
+            <origin rpy="0.0 -1.57079633 0" xyz="0.625 0 -0.28" />
+            <geometry>
+                <mesh filename="package://rl_nachi/urdf/mz04/MZ04-01_J6.dae" />
+            </geometry>
+        </visual>
+        <collision>
+            <geometry>
+                <mesh filename="package://rl_nachi/urdf/mz04/MZ04-01_J6.stl" />
+            </geometry>
+        </collision>
+        <inertial>
+            <mass value="0.1" />
+            <origin xyz="0 0 0" rpy="0 0 0" />
+            <inertia ixx="0.03" iyy="0.03" izz="0.03" ixy="0.0" ixz="0.0" iyz="0.0" />
+        </inertial>
+    </link>
+    <joint name="J6_joint" type="revolute">
+        <origin rpy="1.57079633 0 0" xyz="0.0 0 0.0" />
+        <axis xyz="0 0 1" />
+        <limit effort="100.0" lower="-3.14" upper="3.14" velocity="0.5" />
+        <parent link="J5_link" />
+        <child link="J6_link" />
+    </joint>
+
+
+    <link name="flange_link">
+    	<visual>
+            <origin rpy="3.141592 0.0 0" xyz="-0.03 0.03 0.01" />
+            <geometry>
+                <mesh filename="package://rl_nachi/urdf/mz04/tool.dae" />
+            </geometry>
+        </visual>
+        <collision>
+            <geometry>
+                <mesh filename="package://rl_nachi/urdf/mz04/tool.stl" />
+            </geometry>
+        </collision>
+    </link>
+    <joint name="flange_joint" type="fixed">
+        <origin rpy="0 0 0" xyz="0.0 0 0.072" />
+        <parent link="J6_link" />
+        <child link="flange_link" />
+    </joint>
+
+    <link name="tool_link" />
+    <joint name="tool_joint" type="fixed">
+        <origin rpy="0 0 0" xyz="0.085 0 0.049" />
+        <parent link="flange_link" />
+        <child link="tool_link" />
+    </joint>
+
+
+    <transmission name="trans_J1_joint">
+        <type>transmission_interface/SimpleTransmission</type>
+        <joint name="J1_joint">
+            <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
+        </joint>
+        <actuator name="J1_joint_motor">
+            <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
+            <mechanicalReduction>1</mechanicalReduction>
+        </actuator>
+    </transmission>
+    <transmission name="trans_J2_joint">
+        <type>transmission_interface/SimpleTransmission</type>
+        <joint name="J2_joint">
+            <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
+        </joint>
+        <actuator name="J2_joint_motor">
+            <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
+            <mechanicalReduction>1</mechanicalReduction>
+        </actuator>
+    </transmission>
+    <transmission name="trans_J3_joint">
+        <type>transmission_interface/SimpleTransmission</type>
+        <joint name="J3_joint">
+            <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
+        </joint>
+        <actuator name="J3_joint_motor">
+            <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
+            <mechanicalReduction>1</mechanicalReduction>
+        </actuator>
+    </transmission>
+    <transmission name="trans_J4_joint">
+        <type>transmission_interface/SimpleTransmission</type>
+        <joint name="J4_joint">
+            <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
+        </joint>
+        <actuator name="J4_joint_motor">
+            <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
+            <mechanicalReduction>1</mechanicalReduction>
+        </actuator>
+    </transmission>
+    <transmission name="trans_J5_joint">
+        <type>transmission_interface/SimpleTransmission</type>
+        <joint name="J5_joint">
+            <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
+        </joint>
+        <actuator name="J5_joint_motor">
+            <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
+            <mechanicalReduction>1</mechanicalReduction>
+        </actuator>
+    </transmission>
+    <transmission name="trans_J6_joint">
+        <type>transmission_interface/SimpleTransmission</type>
+        <joint name="J6_joint">
+            <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
+        </joint>
+        <actuator name="J6_joint_motor">
+            <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
+            <mechanicalReduction>1</mechanicalReduction>
+        </actuator>
+    </transmission>
+
+    <gazebo>
+        <plugin name="gazebo_ros_control">
+            <robotNamespace>/</robotNamespace>
+        </plugin>
+    </gazebo>
+</robot>
+
