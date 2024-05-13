@@ -172,7 +172,7 @@
 
 
     <link name="flange_link">
-    	<visual>
+        <visual>
             <origin rpy="3.141592 0.0 0" xyz="-0.03 0.03 0.01" />
             <geometry>
                 <mesh filename="package://rl_nachi/urdf/mz04/tool.dae" />
@@ -183,6 +183,11 @@
                 <mesh filename="package://rl_nachi/urdf/mz04/tool.stl" />
             </geometry>
         </collision>
+        <inertial>
+            <mass value="0.1" />
+            <origin xyz="0 0 0" rpy="0 0 0" />
+            <inertia ixx="0.03" iyy="0.03" izz="0.03" ixy="0.0" ixz="0.0" iyz="0.0" />
+        </inertial>
     </link>
     <joint name="flange_joint" type="fixed">
         <origin rpy="0 0 0" xyz="0.0 0 0.072" />
@@ -192,7 +197,7 @@
 
     <link name="tool_link" />
     <joint name="tool_joint" type="fixed">
-        <origin rpy="0 0 0" xyz="0.085 0 0.049" />
+        <origin rpy="-3.141592 0 0" xyz="0.085 0 0.049" />
         <parent link="flange_link" />
         <child link="tool_link" />
     </joint>
