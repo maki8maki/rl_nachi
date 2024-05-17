@@ -6,7 +6,7 @@ import torch as th
 from torch.utils.tensorboard import SummaryWriter
 
 from .config.config import CombConfig
-from .env import IMAGE_MAX, IMAGE_MIN, NachiEnv
+from .env import IMAGE_HEIGHT, IMAGE_MAX, IMAGE_MIN, IMAGE_WIDTH, NachiEnv
 from .utils import normalize
 
 
@@ -34,6 +34,7 @@ class Executer:
         # その他
         self.rgb_imgs = []
         self.depth_imgs = []
+        self.steps = 0
 
     def make_aliases(self):
         self.fe_model = self.cfg.fe.model
@@ -41,7 +42,10 @@ class Executer:
 
     def get_robot_state(self) -> np.ndarray:
         self.env.update_robot_state()
-        return self.env.robot_state
+        rs = self.env.robot_state
+
+        self.writer.add_tensor("position", th.tensor(rs, dtype=th.float), self.steps)
+        return rs
 
     def get_image(self) -> np.ndarray:
         image = np.concatenate([self.env.rgb_image, self.env.depth_image], axis=2)
@@ -57,7 +61,7 @@ class Executer:
         tensor_image = th.tensor(self.cfg.fe.trans(normalized_img), dtype=th.float, device=self.cfg.device)
         hidden_state = self.fe_model.forward(tensor_image).cpu().squeeze().detach().numpy()
         state = np.concatenate([hidden_state, normalized_rs[: self.cfg.rl.obs_dim]])
-        return rs, state
+        return state
 
     def set_action(self, action: np.ndarray):
         # actionの整形など
@@ -67,6 +71,8 @@ class Executer:
         action = np.clip(action, -1, 1)
         assert action.shape == self.env.action_space.shape
 
+        self.writer.add_tensor("action", th.tensor(action, dtype=th.float), self.steps)
+
         self.env.set_action(action)
 
     def is_done(self) -> bool:
@@ -75,13 +81,21 @@ class Executer:
     def main_loop(self):
         done = False
         while not done:
-            rs, state = self.get_state()  # Agent用の状態を取得
+            state = self.get_state()  # Agent用の状態を取得
             ac = self.rl_model.get_action(state, deterministic=True)
             self.set_action(ac)
             done = self.is_done()
+            self.steps += 1
 
     def close(self):
-        # (N, T, C, H, W)にself.rgb_imgsとself.depth_imgsを変換してadd_video
+        # 各ステップでの画像を保存
+        rgb_tensor = th.tensor(np.array(self.rgb_imgs), dtype=th.uint8)
+        rgb_tensor = th.reshape(rgb_tensor, (1, -1, 3, IMAGE_HEIGHT, IMAGE_WIDTH))
+        self.writer.add_video("rgb_images", rgb_tensor)
+        depth_tensor = th.tensor(np.array(self.depth_imgs), dtype=th.uint8)
+        depth_tensor = th.reshape(depth_tensor, (1, -1, 1, IMAGE_HEIGHT, IMAGE_WIDTH))
+        self.writer.add_video("depth_images", depth_tensor)
+
         self.writer.flush()
         self.writer.close()
         self.env.close()
