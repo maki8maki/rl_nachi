@@ -55,7 +55,7 @@ class NachiEnv:
 
         # 位置姿勢取得の準備
         self.tf_listener = tf.TransformListener()
-        self.robot_state = np.zeros((6,), dtype=np.float64)
+        self.robot_state: np.ndarray = np.zeros((6,), dtype=np.float64)
         self.update_robot_state()
 
         # 画像取得・表示の準備
