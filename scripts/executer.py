@@ -3,11 +3,10 @@ from typing import Tuple
 
 import numpy as np
 import torch as th
+from config.config import CombConfig
+from env import IMAGE_HEIGHT, IMAGE_MAX, IMAGE_MIN, IMAGE_WIDTH, NachiEnv
 from torch.utils.tensorboard import SummaryWriter
-
-from .config.config import CombConfig
-from .env import IMAGE_HEIGHT, IMAGE_MAX, IMAGE_MIN, IMAGE_WIDTH, NachiEnv
-from .utils import normalize
+from utils import normalize
 
 
 class Executer:
@@ -20,11 +19,13 @@ class Executer:
 
         self.make_aliases()
 
+        model_dir = os.path.join(os.path.dirname(__file__), "model")
+
         self.fe_model.load_state_dict(
-            th.load(os.path.join("./model", self.cfg.fe.model_name), map_location=self.cfg.device)
+            th.load(os.path.join(model_dir, self.cfg.fe.model_name), map_location=self.cfg.device)
         )
         self.rl_model.load_state_dict(
-            th.load(os.path.join("./model", f"{self.cfg.basename}.pth"), map_location=self.cfg.device)
+            th.load(os.path.join(model_dir, f"{self.cfg.basename}.pth"), map_location=self.cfg.device)
         )
         self.fe_model.eval()
         self.rl_model.eval()
@@ -48,7 +49,7 @@ class Executer:
         return rs
 
     def get_image(self) -> np.ndarray:
-        image = np.concatenate([self.env.rgb_image, self.env.depth_image], axis=2)
+        image = np.concatenate([self.env.rgb_image, np.expand_dims(self.env.depth_image, 2)], axis=2)
         self.rgb_imgs.append(self.env.rgb_image)
         self.depth_imgs.append(self.env.depth_image)
         return image
@@ -81,11 +82,11 @@ class Executer:
     def main_loop(self):
         done = False
         while not done:
+            self.steps += 1
             state = self.get_state()  # Agent用の状態を取得
             ac = self.rl_model.get_action(state, deterministic=True)
             self.set_action(ac)
             done = self.is_done()
-            self.steps += 1
 
     def close(self):
         # 各ステップでの画像を保存
@@ -99,6 +100,16 @@ class Executer:
         self.writer.flush()
         self.writer.close()
         self.env.close()
+
+    def test(self, loop_num: int):
+        for _ in range(loop_num):
+            print(self.steps)
+            self.steps += 1
+            state = self.get_state()
+            ac = self.rl_model.get_action(state, deterministic=True)
+            ac = np.zeros((6,))
+            self.set_action(ac)
+        self.close()
 
     def __call__(self):
         self.main_loop()

@@ -3,6 +3,7 @@ from typing import Type
 import cv2
 import numpy as np
 import rospy
+import rotations as rot
 import tf
 from cv_bridge import CvBridge, CvBridgeError
 from gymnasium import spaces
@@ -13,8 +14,6 @@ from nachi_opennr_msgs.srv import (
 )
 from sensor_msgs.msg import Image
 from std_msgs.msg import Float64MultiArray
-
-from . import rotations as rot
 
 # OpenNR_IFに関連する定数
 POSITION_COMMAND_TOPIC_NAME = "/joint_group_position_controller/command"
@@ -56,7 +55,6 @@ class NachiEnv:
         # 位置姿勢取得の準備
         self.tf_listener = tf.TransformListener()
         self.robot_state: np.ndarray = np.zeros((6,), dtype=np.float64)
-        self.update_robot_state()
 
         # 画像取得・表示の準備
         self.bridge = CvBridge()
@@ -95,15 +93,18 @@ class NachiEnv:
     def update_robot_state(self):
         now = rospy.Time.now()
         self.tf_listener.waitForTransform(BASE_LINK_NAME, TOOL_LINK_NAME, now, rospy.Duration(2.0))
-        (trans, quat) = self.tf_listener(BASE_LINK_NAME, TOOL_LINK_NAME, now)
-        self.robot_state[:3] = np.array(trans, dtype=np.float64)  # m
+        try:
+            (trans, quat) = self.tf_listener.lookupTransform(BASE_LINK_NAME, TOOL_LINK_NAME, now)
+            self.robot_state[:3] = np.array(trans, dtype=np.float64)  # m
 
-        # rosとmujocoでクォータニオンの形式が異なるので変換
-        m_quat = [quat[3]]
-        m_quat += quat[:3]
+            # rosとmujocoでクォータニオンの形式が異なるので変換
+            m_quat = [quat[3]]
+            m_quat += quat[:3]
 
-        euler = rot.quat2euler(m_quat)  # rad
-        self.robot_state[3:] = np.array(euler, dtype=np.float64)
+            euler = rot.quat2euler(m_quat)  # rad
+            self.robot_state[3:] = np.array(euler, dtype=np.float64)
+        except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException) as e:
+            rospy.logdebug(f"Error During update_robot_state: {e}")
 
     def rgb_image_callback(self, data: Image):
         try:
@@ -134,6 +135,7 @@ class NachiEnv:
     def check_all_systems_ready(self):
         rospy.logdebug("Waiting for all systems to be ready...")
         self.check_all_sensors_ready()
+        self.check_transform_ready()
         self.check_publishers_connection()
         rospy.loginfo("All Systems Ready")
 
@@ -154,6 +156,12 @@ class NachiEnv:
         data = rospy.wait_for_message(DEPTH_IMAGE_TOPIC_NAME, Image)
         self.depth_image_callback(data)
         rospy.logdebug(f"{DEPTH_IMAGE_TOPIC_NAME} Ready")
+
+    def check_transform_ready(self):
+        rospy.logdebug(f"Waiting for transform from {BASE_LINK_NAME} to {TOOL_LINK_NAME} to be ready...")
+        self.tf_listener.waitForTransform(BASE_LINK_NAME, TOOL_LINK_NAME, rospy.Time(), rospy.Duration(2.0))
+        self.update_robot_state()
+        rospy.loginfo(f"transform from {BASE_LINK_NAME} to {TOOL_LINK_NAME} Ready")
 
     def check_publishers_connection(self):
         rospy.logdebug("Waiting for all publishers to be connected...")
@@ -179,7 +187,7 @@ class NachiEnv:
         pos_target = pos_cur + pos_ctrl
         mat_target = rot.add_rot_mat(rot.euler2mat(rot_cur), rot.euler2mat(rot_ctrl))
         rot_target = np.rad2deg(rot.mat2euler(mat_target))  # deg
-        target = np.concatenate(pos_target, rot_target)
+        target = np.concatenate([pos_target, rot_target])
 
         # 指令の送信
         msg = Float64MultiArray()

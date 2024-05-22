@@ -96,7 +96,6 @@ class CombConfig:
             posture_random = "r"
         else:
             posture_random = "s"
-        self.buffer_name = f"buffer_o-{self.rl.obs_dim}_a-{self.rl.act_dim}_{position_random}{posture_random}_w-hs_{self.memory_size}.pcl"  # noqa: E501
         self.fe.model_name = self.fe.model_name.replace(".pth", f"_{position_random}{posture_random}_{init}.pth")
         self.output_dir = hydra.core.hydra_config.HydraConfig.get().runtime.output_dir
 
