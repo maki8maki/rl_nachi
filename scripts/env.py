@@ -16,6 +16,7 @@ from sensor_msgs.msg import Image
 from std_msgs.msg import Float64MultiArray
 
 # OpenNR_IFに関連する定数
+ANGLE_COMMAND_TOPIC_NAME = "/joint_group_angle_controller/command"
 POSITION_COMMAND_TOPIC_NAME = "/joint_group_position_controller/command"
 RGB_IMAGE_TOPIC_NAME = "/camera/camera/color/image_rect_raw"
 DEPTH_IMAGE_TOPIC_NAME = "/camera/camera/aligned_depth_to_color/image_raw"
@@ -65,6 +66,9 @@ class NachiEnv:
         self.depth_image_sub = rospy.Subscriber(DEPTH_IMAGE_TOPIC_NAME, Image, self.depth_image_callback, queue_size=1)
 
         # 動作指令の準備
+        self.angle_command_pub = rospy.Publisher(
+            ANGLE_COMMAND_TOPIC_NAME, Float64MultiArray, queue_size=1
+        )  # 各軸角度指令送信パブリッシャー
         self.position_command_pub = rospy.Publisher(POSITION_COMMAND_TOPIC_NAME, Float64MultiArray, queue_size=1)
 
         # その他
@@ -165,8 +169,15 @@ class NachiEnv:
 
     def check_publishers_connection(self):
         rospy.logdebug("Waiting for all publishers to be connected...")
+        self.check_angle_command_pub_connection()
         self.check_position_command_pub_connection()
         rospy.loginfo("All Publishers Ready")
+
+    def check_angle_command_pub_connection(self):
+        rospy.logdebug("Waiting for angle_command_pub to be connected...")
+        while self.angle_command_pub.get_num_connections() == 0 and not rospy.is_shutdown():
+            self.rate.sleep()
+        rospy.logdebug("angle_command_pub Connected")
 
     def check_position_command_pub_connection(self):
         rospy.logdebug("Waiting for position_command_pub to be connected...")
@@ -190,19 +201,51 @@ class NachiEnv:
         target = np.concatenate([pos_target, rot_target])
 
         # 指令の送信
+        self.set_position_action(target)
+
+    def set_angle_action(self, target: np.ndarray):
+        assert target.shape == (6,)
+        msg = Float64MultiArray()
+        msg.data = target
+        self.angle_command_pub.publish(msg)
+        rospy.logdebug(f"Published angle target: {target}")
+
+        self.wait_action()
+
+    def set_position_action(self, target: np.ndarray):
+        assert target.shape == (6,)
         msg = Float64MultiArray()
         msg.data = target
         self.position_command_pub.publish(msg)
-        rospy.logdebug(f"Published target: {target}")
+        rospy.logdebug(f"Published position target: {target}")
 
-        # 指令の受付まで待機、一定時間で先に進む
-        start = rospy.Time.now()
-        while not self.is_moving() and (rospy.Time.now() - start) <= rospy.Duration(0.5):
-            self.rate.sleep()
+        self.wait_action()
 
-        # 動作の終了まで待機
-        while self.is_moving():
-            self.rate.sleep()
+    def set_waiting_position(self):
+        target = np.array(
+            [
+                0.0,
+                90.0,
+                0.0,
+                0.0,
+                -90.0,
+                0.0,
+            ]
+        )
+        self.set_angle_action(target)
+
+    def set_initial_position(self):
+        target = np.rad2deg(
+            [
+                0.0,
+                1.67,
+                -0.157,
+                0.0,
+                -1.57,
+                0.0,
+            ]
+        )
+        self.set_angle_action(target)
 
     def is_moving(self) -> bool:
         response = self.call_service(
@@ -214,7 +257,20 @@ class NachiEnv:
             # サービスを取得できない場合は動作中にする
             return True
 
+    def wait_action(self):
+        # 指令の受付まで待機、一定時間で先に進む
+        start = rospy.Time.now()
+        while not self.is_moving() and (rospy.Time.now() - start) <= rospy.Duration(0.5):
+            self.rate.sleep()
+
+        # 動作の終了まで待機
+        while self.is_moving():
+            self.rate.sleep()
+
     def close(self):
+        # 待機位置に移動する
+        self.set_waiting_position()
+
         # モータをオフにする
         self.call_service(SRV_NAME_CTRLMOTER_OFF, TriggerWithResultCode)
 

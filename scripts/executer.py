@@ -102,6 +102,7 @@ class Executer:
         self.env.close()
 
     def test(self, loop_num: int):
+        self.env.set_initial_position()
         for _ in range(loop_num):
             print(self.steps)
             self.steps += 1
@@ -112,5 +113,6 @@ class Executer:
         self.close()
 
     def __call__(self):
+        self.env.set_initial_position()
         self.main_loop()
         self.close()
