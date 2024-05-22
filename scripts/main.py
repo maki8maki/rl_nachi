@@ -17,11 +17,11 @@ def main(_cfg: OmegaConf):
     cfg = CombConfig.convert(_cfg)
     print(f"\n{cfg}\n")
 
-    executer = Executer(cfg)
-    del _cfg, cfg
-
     if not yes_no_input():
         exit()
+
+    executer = Executer(cfg)
+    del _cfg, cfg
 
     executer.test(10)
 
