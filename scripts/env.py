@@ -83,33 +83,6 @@ class NachiEnv:
 
         self.check_all_systems_ready()
 
-    def call_service(self, service_name: str, service_class: Type[object], *call_args):
-        rospy.wait_for_service(service_name)
-        try:
-            client = rospy.ServiceProxy(service_name, service_class)
-            response = client(*call_args)
-            assert response.result >= NR_E_NORMAL, f"{service_name} return error code: {response.rersult}"
-            return response
-        except rospy.ServiceException:
-            rospy.logwarn(f"Service call failed: {service_name}")
-            return None
-
-    def update_robot_state(self):
-        now = rospy.Time.now()
-        self.tf_listener.waitForTransform(BASE_LINK_NAME, TOOL_LINK_NAME, now, rospy.Duration(2.0))
-        try:
-            (trans, quat) = self.tf_listener.lookupTransform(BASE_LINK_NAME, TOOL_LINK_NAME, now)
-            self.robot_state[:3] = np.array(trans, dtype=np.float64)  # m
-
-            # rosとmujocoでクォータニオンの形式が異なるので変換
-            m_quat = [quat[3]]
-            m_quat += quat[:3]
-
-            euler = rot.quat2euler(m_quat)  # rad
-            self.robot_state[3:] = np.array(euler, dtype=np.float64)
-        except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException) as e:
-            rospy.logdebug(f"Error During update_robot_state: {e}")
-
     def rgb_image_callback(self, data: Image):
         try:
             bgr_image = self.bridge.imgmsg_to_cv2(data, "bgr8")
@@ -184,6 +157,22 @@ class NachiEnv:
         while self.position_command_pub.get_num_connections() == 0 and not rospy.is_shutdown():
             self.rate.sleep()
         rospy.logdebug("position_command_pub Connected")
+
+    def update_robot_state(self):
+        now = rospy.Time.now()
+        self.tf_listener.waitForTransform(BASE_LINK_NAME, TOOL_LINK_NAME, now, rospy.Duration(2.0))
+        try:
+            (trans, quat) = self.tf_listener.lookupTransform(BASE_LINK_NAME, TOOL_LINK_NAME, now)
+            self.robot_state[:3] = np.array(trans, dtype=np.float64)  # m
+
+            # rosとmujocoでクォータニオンの形式が異なるので変換
+            m_quat = [quat[3]]
+            m_quat += quat[:3]
+
+            euler = rot.quat2euler(m_quat)  # rad
+            self.robot_state[3:] = np.array(euler, dtype=np.float64)
+        except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException) as e:
+            rospy.logdebug(f"Error during update_robot_state: {e}")
 
     def set_action(self, action: np.ndarray):
         action = np.clip(action.copy(), -1, 1)
@@ -266,6 +255,17 @@ class NachiEnv:
         # 動作の終了まで待機
         while self.is_moving():
             self.rate.sleep()
+
+    def call_service(self, service_name: str, service_class: Type[object], *call_args):
+        rospy.wait_for_service(service_name)
+        try:
+            client = rospy.ServiceProxy(service_name, service_class)
+            response = client(*call_args)
+            assert response.result >= NR_E_NORMAL, f"{service_name} return error code: {response.rersult}"
+            return response
+        except rospy.ServiceException:
+            rospy.logwarn(f"Service call failed: {service_name}")
+            return None
 
     def close(self):
         # 待機位置に移動する
