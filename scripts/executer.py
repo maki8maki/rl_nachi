@@ -1,6 +1,7 @@
 import os
 from typing import Tuple
 
+import cv2
 import numpy as np
 import torch as th
 from config.config import CombConfig
@@ -43,15 +44,19 @@ class Executer:
 
     def get_robot_state(self) -> np.ndarray:
         self.env.update_robot_state()
-        rs = self.env.robot_state
+        rs = self.env.tool_pose
 
         self.writer.add_tensor("position", th.tensor(rs, dtype=th.float), self.steps)
         return rs
 
     def get_image(self) -> np.ndarray:
-        image = np.concatenate([self.env.rgb_image, np.expand_dims(self.env.depth_image, 2)], axis=2)
-        self.rgb_imgs.append(self.env.rgb_image)
-        self.depth_imgs.append(self.env.depth_image)
+        rgb = self.env.rgb_image
+        depth = self.env.depth_image
+        image = np.concatenate([rgb, np.expand_dims(depth, 2)], axis=2)
+        self.rgb_imgs.append(rgb)
+        self.depth_imgs.append(cv2.cvtColor(depth, cv2.COLOR_GRAY2RGB))
+        self.writer.add_image("rgb", rgb, self.steps, dataformats="HWC")
+        self.writer.add_image("depth", depth, self.steps, dataformats="HW")
         return image
 
     def get_state(self) -> Tuple[np.ndarray, th.Tensor]:
@@ -94,7 +99,7 @@ class Executer:
         rgb_tensor = th.reshape(rgb_tensor, (1, -1, 3, IMAGE_HEIGHT, IMAGE_WIDTH))
         self.writer.add_video("rgb_images", rgb_tensor)
         depth_tensor = th.tensor(np.array(self.depth_imgs), dtype=th.uint8)
-        depth_tensor = th.reshape(depth_tensor, (1, -1, 1, IMAGE_HEIGHT, IMAGE_WIDTH))
+        depth_tensor = th.reshape(depth_tensor, (1, -1, 3, IMAGE_HEIGHT, IMAGE_WIDTH))
         self.writer.add_video("depth_images", depth_tensor)
 
         self.writer.flush()
@@ -109,6 +114,7 @@ class Executer:
             state = self.get_state()
             ac = self.rl_model.get_action(state, deterministic=True)
             ac = np.zeros((6,))
+            ac = np.random.uniform(-1, 1, (6,))
             self.set_action(ac)
         self.close()
 

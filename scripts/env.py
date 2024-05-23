@@ -30,6 +30,7 @@ NR_E_NORMAL = 0
 
 # TFに関連する定数
 BASE_LINK_NAME = "base_link"
+FLANGE_LINK_NAME = "flange_link"
 TOOL_LINK_NAME = "tool_link"
 
 # Depthカメラに関連する定数
@@ -55,7 +56,8 @@ class NachiEnv:
 
         # 位置姿勢取得の準備
         self.tf_listener = tf.TransformListener()
-        self.robot_state: np.ndarray = np.zeros((6,), dtype=np.float64)
+        self.tool_pose: np.ndarray = np.zeros((6,), dtype=np.float64)
+        self.flange_pose: np.ndarray = np.zeros((6,), dtype=np.float64)
 
         # 画像取得・表示の準備
         self.bridge = CvBridge()
@@ -66,9 +68,7 @@ class NachiEnv:
         self.depth_image_sub = rospy.Subscriber(DEPTH_IMAGE_TOPIC_NAME, Image, self.depth_image_callback, queue_size=1)
 
         # 動作指令の準備
-        self.angle_command_pub = rospy.Publisher(
-            ANGLE_COMMAND_TOPIC_NAME, Float64MultiArray, queue_size=1
-        )  # 各軸角度指令送信パブリッシャー
+        self.angle_command_pub = rospy.Publisher(ANGLE_COMMAND_TOPIC_NAME, Float64MultiArray, queue_size=1)
         self.position_command_pub = rospy.Publisher(POSITION_COMMAND_TOPIC_NAME, Float64MultiArray, queue_size=1)
 
         # その他
@@ -137,8 +137,9 @@ class NachiEnv:
     def check_transform_ready(self):
         rospy.logdebug(f"Waiting for transform from {BASE_LINK_NAME} to {TOOL_LINK_NAME} to be ready...")
         self.tf_listener.waitForTransform(BASE_LINK_NAME, TOOL_LINK_NAME, rospy.Time(), rospy.Duration(2.0))
+        rospy.logdebug(f"transform from {BASE_LINK_NAME} to {TOOL_LINK_NAME} Ready")
         self.update_robot_state()
-        rospy.loginfo(f"transform from {BASE_LINK_NAME} to {TOOL_LINK_NAME} Ready")
+        rospy.loginfo("All Transform Ready")
 
     def check_publishers_connection(self):
         rospy.logdebug("Waiting for all publishers to be connected...")
@@ -162,15 +163,27 @@ class NachiEnv:
         now = rospy.Time.now()
         self.tf_listener.waitForTransform(BASE_LINK_NAME, TOOL_LINK_NAME, now, rospy.Duration(2.0))
         try:
+            # tool
             (trans, quat) = self.tf_listener.lookupTransform(BASE_LINK_NAME, TOOL_LINK_NAME, now)
-            self.robot_state[:3] = np.array(trans, dtype=np.float64)  # m
+            self.tool_pose[:3] = np.array(trans, dtype=np.float64)  # m
 
             # rosとmujocoでクォータニオンの形式が異なるので変換
             m_quat = [quat[3]]
             m_quat += quat[:3]
 
             euler = rot.quat2euler(m_quat)  # rad
-            self.robot_state[3:] = np.array(euler, dtype=np.float64)
+            self.tool_pose[3:] = np.array(euler, dtype=np.float64)
+
+            # flange
+            (trans, quat) = self.tf_listener.lookupTransform(BASE_LINK_NAME, FLANGE_LINK_NAME, now)
+            self.flange_pose[:3] = np.array(trans, dtype=np.float64) * 1000  # mm
+
+            # rosとmujocoでクォータニオンの形式が異なるので変換
+            m_quat = [quat[3]]
+            m_quat += quat[:3]
+
+            euler = rot.quat2euler(m_quat)  # rad
+            self.flange_pose[3:] = np.array(euler, dtype=np.float64)
         except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException) as e:
             rospy.logdebug(f"Error during update_robot_state: {e}")
 
@@ -179,11 +192,11 @@ class NachiEnv:
 
         # unscale
         pos_ctrl, rot_ctrl = action[:3], action[3:]
-        pos_ctrl *= 0.05  # m
+        pos_ctrl *= 0.05 * 1000  # mm
         rot_ctrl *= np.deg2rad(10)  # rad
 
-        # 目標の計算
-        pos_cur, rot_cur = self.robot_state[:3], np.deg2rad(self.robot_state[3:])
+        # 目標の計算（flangeとtoolは固定されている）
+        pos_cur, rot_cur = self.flange_pose[:3], np.deg2rad(self.flange_pose[3:])
         pos_target = pos_cur + pos_ctrl
         mat_target = rot.add_rot_mat(rot.euler2mat(rot_cur), rot.euler2mat(rot_ctrl))
         rot_target = np.rad2deg(rot.mat2euler(mat_target))  # deg

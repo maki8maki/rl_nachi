@@ -23,6 +23,9 @@ def main(_cfg: OmegaConf):
     executer = Executer(cfg)
     del _cfg, cfg
 
+    if not yes_no_input():
+        exit()
+
     executer.test(10)
 
 
