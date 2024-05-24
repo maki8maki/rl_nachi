@@ -122,5 +122,7 @@ class Executer:
 
     def __call__(self):
         self.env.set_initial_position()
-        self.main_loop()
-        self.close()
+        try:
+            self.main_loop()
+        finally:
+            self.close()
