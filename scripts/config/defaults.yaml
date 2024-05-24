@@ -5,7 +5,7 @@ defaults:
 
 hydra:
   run:
-    dir: logs/${basename}/${now:%Y%m%d-%H%M}
+    dir: src/rl_nachi/logs/${basename}/${now:%Y%m%d-%H%M}
 
 position_random: False
 posture_random: False

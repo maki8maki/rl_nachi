@@ -12,3 +12,6 @@ scripts/model/*
 # for urdf
 *.dae
 *.stl
+
+# for log
+logs/*
