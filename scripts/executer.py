@@ -93,14 +93,16 @@ class Executer:
             self.set_action(ac)
             done = self.is_done()
 
+    def images2video_tensor(self, images):
+        tensor = th.tensor(np.array(images), dtype=th.uint8)
+        tensor = th.permute(tensor, (0, 3, 1, 2))
+        tensor = th.reshape(tensor, (1, -1, 3, IMAGE_HEIGHT, IMAGE_WIDTH))
+        return tensor
+
     def close(self):
         # 各ステップでの画像を保存
-        rgb_tensor = th.tensor(np.array(self.rgb_imgs), dtype=th.uint8)
-        rgb_tensor = th.reshape(rgb_tensor, (1, -1, 3, IMAGE_HEIGHT, IMAGE_WIDTH))
-        self.writer.add_video("rgb_images", rgb_tensor)
-        depth_tensor = th.tensor(np.array(self.depth_imgs), dtype=th.uint8)
-        depth_tensor = th.reshape(depth_tensor, (1, -1, 3, IMAGE_HEIGHT, IMAGE_WIDTH))
-        self.writer.add_video("depth_images", depth_tensor)
+        self.writer.add_video("rgb_images", self.images2video_tensor(self.rgb_imgs))
+        self.writer.add_video("depth_images", self.images2video_tensor(self.depth_imgs))
 
         self.writer.flush()
         self.writer.close()
