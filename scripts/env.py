@@ -176,7 +176,7 @@ class NachiEnv:
 
             # flange
             (trans, quat) = self.tf_listener.lookupTransform(BASE_LINK_NAME, FLANGE_LINK_NAME, now)
-            self.flange_pose[:3] = np.array(trans, dtype=np.float64) * 1000  # mm
+            self.flange_pose[:3] = np.array(trans, dtype=np.float64)
 
             # rosとmujocoでクォータニオンの形式が異なるので変換
             m_quat = [quat[3]]
@@ -192,15 +192,15 @@ class NachiEnv:
 
         # unscale
         pos_ctrl, rot_ctrl = action[:3], action[3:]
-        pos_ctrl *= 0.05 * 1000  # mm
+        pos_ctrl *= 0.05  # m
         rot_ctrl *= np.deg2rad(10)  # rad
 
         # 目標の計算（flangeとtoolは固定されている）
         pos_cur, rot_cur = self.flange_pose[:3], np.deg2rad(self.flange_pose[3:])
         pos_target = pos_cur + pos_ctrl
         mat_target = rot.add_rot_mat(rot.euler2mat(rot_cur), rot.euler2mat(rot_ctrl))
-        rot_target = np.rad2deg(rot.mat2euler(mat_target))  # deg
-        target = np.concatenate([pos_target, rot_target])
+        rot_target = rot.mat2euler(mat_target)
+        target = np.concatenate([pos_target * 1000, np.rad2deg(rot_target)])
 
         # 指令の送信
         self.set_position_action(target)
