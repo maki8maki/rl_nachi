@@ -108,8 +108,7 @@ class Executer:
         self.writer.close()
         self.env.close()
 
-    def test(self, loop_num: int):
-        self.env.set_initial_position()
+    def test_loop(self, loop_num: int):
         for _ in range(loop_num):
             print(self.steps)
             self.steps += 1
@@ -118,7 +117,13 @@ class Executer:
             ac = np.zeros((6,))
             ac = np.random.uniform(-1, 1, (6,))
             self.set_action(ac)
-        self.close()
+
+    def test(self, loop_num: int):
+        self.env.set_initial_position()
+        try:
+            self.test_loop(loop_num)
+        finally:
+            self.close()
 
     def __call__(self):
         self.env.set_initial_position()

@@ -220,7 +220,7 @@ class NachiEnv:
 
     def set_position_action(self, target: np.ndarray):
         assert target.shape == (6,)
-        assert SHIFT_MIN <= target and target <= SHIFT_MAX
+        assert (SHIFT_MIN <= target).all() and (target <= SHIFT_MAX).all(), target
         msg = Float64MultiArray()
         msg.data = target
         self.position_command_pub.publish(msg)
