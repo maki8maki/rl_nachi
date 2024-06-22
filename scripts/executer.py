@@ -114,8 +114,6 @@ class Executer:
             self.steps += 1
             state = self.get_state()
             ac = self.rl_model.get_action(state, deterministic=True)
-            ac = np.zeros((6,))
-            ac = np.random.uniform(-1, 1, (6,))
             self.set_action(ac)
 
     def test(self, loop_num: int):
