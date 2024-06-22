@@ -61,7 +61,7 @@ class NachiEnv:
         # 位置姿勢取得の準備
         self.tf_listener = tf.TransformListener()
         self.tool_pose: np.ndarray = np.zeros((6,), dtype=np.float64)
-        self.flange_pose: np.ndarray = np.zeros((6,), dtype=np.float64)
+        self.flange_pose: np.ndarray = np.zeros((7,), dtype=np.float64)  # x, y, z, quat
 
         # 画像取得・表示の準備
         self.bridge = CvBridge()
@@ -179,15 +179,9 @@ class NachiEnv:
             self.tool_pose[3:] = np.array(euler, dtype=np.float64)
 
             # flange
-            (trans, quat) = self.tf_listener.lookupTransform(BASE_LINK_NAME, FLANGE_LINK_NAME, now)
+            (trans, _) = self.tf_listener.lookupTransform(BASE_LINK_NAME, FLANGE_LINK_NAME, now)
             self.flange_pose[:3] = np.array(trans, dtype=np.float64)
-
-            # rosとmujocoでクォータニオンの形式が異なるので変換
-            m_quat = [quat[3]]
-            m_quat += quat[:3]
-
-            euler = rot.quat2euler(m_quat)  # rad
-            self.flange_pose[3:] = np.array(euler, dtype=np.float64)
+            self.flange_pose[3:] = np.array(m_quat, dtype=np.float64) * -1.0
         except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException) as e:
             rospy.logdebug(f"Error during update_robot_state: {e}")
 
@@ -200,9 +194,9 @@ class NachiEnv:
         rot_ctrl *= np.deg2rad(10)  # rad
 
         # 目標の計算（flangeとtoolは固定されている）
-        pos_cur, rot_cur = self.flange_pose[:3], np.deg2rad(self.flange_pose[3:])
+        pos_cur, quat_cur = self.flange_pose[:3], self.flange_pose[3:]
         pos_target = pos_cur + pos_ctrl
-        mat_target = rot.add_rot_mat(rot.euler2mat(rot_cur), rot.euler2mat(rot_ctrl))
+        mat_target = rot.add_rot_mat(rot.quat2mat(quat_cur), rot.euler2mat(rot_ctrl))
         rot_target = rot.mat2euler(mat_target)
         target = np.concatenate([pos_target * 1000, np.rad2deg(rot_target)])
 
