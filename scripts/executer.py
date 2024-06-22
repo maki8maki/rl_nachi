@@ -1,11 +1,10 @@
 import os
 from typing import Tuple
 
-import cv2
 import numpy as np
 import torch as th
 from config.config import CombConfig
-from env import IMAGE_HEIGHT, IMAGE_MAX, IMAGE_MIN, IMAGE_WIDTH, NachiEnv
+from env import IMAGE_MAX, IMAGE_MIN, NachiEnv
 from torch.utils.tensorboard import SummaryWriter
 from utils import normalize
 
@@ -34,8 +33,6 @@ class Executer:
         self.env = NachiEnv()
 
         # その他
-        self.rgb_imgs = []
-        self.depth_imgs = []
         self.steps = 0
 
     def make_aliases(self):
@@ -53,8 +50,6 @@ class Executer:
         rgb = self.env.rgb_image
         depth = self.env.depth_image
         image = np.concatenate([rgb, np.expand_dims(depth, 2)], axis=2)
-        self.rgb_imgs.append(rgb)
-        self.depth_imgs.append(cv2.cvtColor(depth, cv2.COLOR_GRAY2RGB))
         self.writer.add_image("rgb", rgb, self.steps, dataformats="HWC")
         self.writer.add_image("depth", depth, self.steps, dataformats="HW")
         return image
@@ -93,17 +88,7 @@ class Executer:
             self.set_action(ac)
             done = self.is_done()
 
-    def images2video_tensor(self, images):
-        tensor = th.tensor(np.array(images), dtype=th.uint8)
-        tensor = th.permute(tensor, (0, 3, 1, 2))
-        tensor = th.reshape(tensor, (1, -1, 3, IMAGE_HEIGHT, IMAGE_WIDTH))
-        return tensor
-
     def close(self):
-        # 各ステップでの画像を保存
-        self.writer.add_video("rgb_images", self.images2video_tensor(self.rgb_imgs))
-        self.writer.add_video("depth_images", self.images2video_tensor(self.depth_imgs))
-
         self.writer.flush()
         self.writer.close()
         self.env.close()
