@@ -50,8 +50,8 @@ class Executer:
         rgb = self.env.rgb_image
         depth = self.env.depth_image
         image = np.concatenate([rgb, np.expand_dims(depth, 2)], axis=2)
-        self.writer.add_image("rgb", rgb, self.steps, dataformats="HWC")
-        self.writer.add_image("depth", depth, self.steps, dataformats="HW")
+        self.writer.add_image("rgb/original", rgb, self.steps, dataformats="HWC")
+        self.writer.add_image("depth/original", depth, self.steps, dataformats="HW")
         return image
 
     def get_state(self) -> Tuple[np.ndarray, th.Tensor]:
@@ -60,8 +60,13 @@ class Executer:
         rs = self.get_robot_state()
         normalized_rs = normalize(rs, self.env.observation_space.low, self.env.observation_space.high)
         tensor_image = th.tensor(self.cfg.fe.trans(normalized_img), dtype=th.float, device=self.cfg.device)
-        hidden_state = self.fe_model.forward(tensor_image).cpu().squeeze().detach().numpy()
-        state = np.concatenate([hidden_state, normalized_rs[: self.cfg.rl.obs_dim]])
+        hidden_state, recon_imgs = self.fe_model.forward(tensor_image, return_pred=True)
+        state = np.concatenate([hidden_state.cpu().squeeze().detach().numpy(), normalized_rs[: self.cfg.rl.obs_dim]])
+
+        # log
+        recon_imgs = recon_imgs.squeeze()
+        self.writer.add_image("rgb/reconstructed", recon_imgs[:3], self.steps)
+        self.writer.add_image("depth/reconstructed", recon_imgs[3:], self.steps)
         return state
 
     def set_action(self, action: np.ndarray):
