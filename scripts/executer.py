@@ -3,7 +3,7 @@ from typing import Tuple
 
 import numpy as np
 import torch as th
-from config.config import CombConfig
+from config.config import CombConfig, SB3Config
 from env import IMAGE_MAX, IMAGE_MIN, NachiEnv
 from torch.utils.tensorboard import SummaryWriter
 from utils import normalize
@@ -50,8 +50,8 @@ class Executer:
         rgb = self.env.rgb_image
         depth = self.env.depth_image
         image = np.concatenate([rgb, np.expand_dims(depth, 2)], axis=2)
-        self.writer.add_image("rgb/original", rgb, self.steps, dataformats="HWC")
-        self.writer.add_image("depth/original", depth, self.steps, dataformats="HW")
+        self.writer.add_image("rgb/original/raw", rgb, self.steps, dataformats="HWC")
+        self.writer.add_image("depth/original/raw", depth, self.steps, dataformats="HW")
         return image
 
     def get_state(self) -> Tuple[np.ndarray, th.Tensor]:
@@ -60,6 +60,8 @@ class Executer:
         rs = self.get_robot_state()
         normalized_rs = normalize(rs, self.env.observation_space.low, self.env.observation_space.high)
         tensor_image = th.tensor(self.cfg.fe.trans(normalized_img), dtype=th.float, device=self.cfg.device)
+        self.writer.add_image("rgb/original/transformed", tensor_image[:3], self.steps)
+        self.writer.add_image("depth/original/transformed", tensor_image[3:], self.steps)
         hidden_state, recon_imgs = self.fe_model.forward(tensor_image, return_pred=True)
         state = np.concatenate([hidden_state.cpu().squeeze().detach().numpy(), normalized_rs[: self.cfg.rl.obs_dim]])
 
@@ -119,3 +121,69 @@ class Executer:
             self.main_loop()
         finally:
             self.close()
+
+
+class SB3Executer(Executer):
+    cfg: SB3Config
+
+    def __init__(self, cfg: SB3Config):
+        self.cfg = cfg
+        self.writer = SummaryWriter(log_dir=cfg.output_dir)
+
+        self.make_aliases()
+
+        self.fe_model.eval()
+        self.rl_model.set_training_mode(False)
+
+        self.env = NachiEnv()
+
+        # その他
+        self.steps = 0
+
+    def make_aliases(self):
+        self.fe_model = self.cfg.fe.model
+        self.rl_model = self.cfg.model
+
+    def get_state(self) -> Tuple[np.ndarray, th.Tensor]:
+        img = self.get_image()
+        normalized_img = normalize(img, IMAGE_MIN, IMAGE_MAX)
+        rs = self.get_robot_state()
+        normalized_rs = normalize(rs, self.env.observation_space.low, self.env.observation_space.high)
+        tensor_image = th.tensor(self.cfg.fe.trans(normalized_img), dtype=th.float, device=self.cfg.device)
+        self.writer.add_image("rgb/original", tensor_image[:3], self.steps)
+        self.writer.add_image("depth/original", tensor_image[3:], self.steps)
+        hidden_state, recon_imgs = self.fe_model.forward(tensor_image, return_pred=True)
+        state = np.concatenate([hidden_state.cpu().squeeze().detach().numpy(), normalized_rs])
+
+        # log
+        recon_imgs = recon_imgs.squeeze()
+        self.writer.add_image("rgb/reconstructed", recon_imgs[:3], self.steps)
+        self.writer.add_image("depth/reconstructed", recon_imgs[3:], self.steps)
+        return state
+
+    def set_action(self, action: np.ndarray):
+        # actionの整形など
+        action = action.copy()
+        action = np.clip(action, -1, 1)
+        assert action.shape == self.env.action_space.shape
+
+        self.writer.add_tensor("action", th.tensor(action, dtype=th.float), self.steps)
+
+        self.env.set_action(action)
+
+    def main_loop(self):
+        done = False
+        while not done:
+            self.steps += 1
+            state = self.get_state()  # Agent用の状態を取得
+            ac, _ = self.rl_model.predict(th.tensor(state), deterministic=True)
+            self.set_action(ac)
+            done = self.is_done()
+
+    def test_loop(self, loop_num: int):
+        for _ in range(loop_num):
+            print(self.steps)
+            self.steps += 1
+            state = self.get_state()
+            ac, _ = self.rl_model.predict(th.tensor(state), deterministic=True)
+            self.set_action(ac)

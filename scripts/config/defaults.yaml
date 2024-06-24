@@ -9,7 +9,6 @@ hydra:
 
 position_random: False
 posture_random: False
-save_anim_num: 10
 device: cuda
 
 basename: SAC_trainedDCAE_o-${rl.obs_dim}_a-${rl.act_dim}
