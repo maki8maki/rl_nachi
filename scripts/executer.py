@@ -56,7 +56,7 @@ class Executer:
 
     def get_state(self) -> Tuple[np.ndarray, th.Tensor]:
         img = self.get_image()
-        normalized_img = normalize(img, IMAGE_MIN, IMAGE_MAX)
+        normalized_img = normalize(img, IMAGE_MIN, IMAGE_MAX) * 0.5 + 0.5
         rs = self.get_robot_state()
         normalized_rs = normalize(rs, self.env.observation_space.low, self.env.observation_space.high)
         tensor_image = th.tensor(self.cfg.fe.trans(normalized_img), dtype=th.float, device=self.cfg.device)
@@ -146,7 +146,7 @@ class SB3Executer(Executer):
 
     def get_state(self) -> Tuple[np.ndarray, th.Tensor]:
         img = self.get_image()
-        normalized_img = normalize(img, IMAGE_MIN, IMAGE_MAX)
+        normalized_img = normalize(img, IMAGE_MIN, IMAGE_MAX) * 0.5 + 0.5
         rs = self.get_robot_state()
         normalized_rs = normalize(rs, self.env.observation_space.low, self.env.observation_space.high)
         tensor_image = th.tensor(self.cfg.fe.trans(normalized_img), dtype=th.float, device=self.cfg.device)
