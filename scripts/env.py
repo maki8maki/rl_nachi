@@ -1,4 +1,4 @@
-from typing import Type
+from typing import Optional, Type
 
 import cv2
 import numpy as np
@@ -105,7 +105,7 @@ class NachiEnv:
         except CvBridgeError as e:
             rospy.logerr(f"Failed to convert Depth image: {e}")
 
-    def update_display(self, bgr_image: np.ndarray = None):
+    def update_display(self, bgr_image: Optional[np.ndarray] = None):
         if bgr_image is None:
             bgr_image = cv2.cvtColor(self.rgb_image, cv2.COLOR_RGB2BGR)
         depth_image = cv2.cvtColor(self.depth_image, cv2.COLOR_GRAY2BGR)
@@ -197,7 +197,12 @@ class NachiEnv:
         pos_cur, quat_cur = self.flange_pose[:3], self.flange_pose[3:]
         pos_target = pos_cur + pos_ctrl
         mat_target = rot.add_rot_mat(rot.quat2mat(quat_cur), rot.euler2mat(rot_ctrl))
-        rot_target = rot.mat2euler(mat_target)
+        rot_target_ = rot.mat2euler(mat_target)
+
+        # このように変換しないといけないみたい
+        rot_target = rot_target_.copy()
+        rot_target[0] = rot_target_[2]
+        rot_target[2] = rot_target_[0]
         target = np.concatenate([pos_target * 1000, np.rad2deg(rot_target)])
 
         # 指令の送信
