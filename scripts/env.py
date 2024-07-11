@@ -197,12 +197,10 @@ class NachiEnv:
         pos_cur, quat_cur = self.flange_pose[:3], self.flange_pose[3:]
         pos_target = pos_cur + pos_ctrl
         mat_target = rot.add_rot_mat(rot.quat2mat(quat_cur), rot.euler2mat(rot_ctrl))
-        rot_target_ = rot.mat2euler(mat_target)
+        rot_target = rot.mat2euler(mat_target)
 
-        # このように変換しないといけないみたい
-        rot_target = rot_target_.copy()
-        rot_target[0] = rot_target_[2]
-        rot_target[2] = rot_target_[0]
+        # z軸周りがraw、x軸周りがyawと定義されている
+        rot_target[0], rot_target[2] = rot_target[2], rot_target[0]
         target = np.concatenate([pos_target * 1000, np.rad2deg(rot_target)])
 
         # 指令の送信
