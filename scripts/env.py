@@ -44,7 +44,7 @@ IMAGE_WIDTH = 848
 IMAGE_HEIGHT = 480
 
 # マニピュレータの制限に関する定数
-SHIFT_MIN = np.array([130.0, -300.0, 350.0, -30.0, -30.0, -90.0])  # mm, deg
+SHIFT_MIN = np.array([130.0, -300.0, 350.0, -30.0, -45.0, -90.0])  # mm, deg
 SHIFT_MAX = np.array([580.0, 300.0, 600.0, 30.0, 90.0, 90.0])  # mm, deg
 
 
