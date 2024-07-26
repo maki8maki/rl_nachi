@@ -15,3 +15,6 @@ scripts/model/*
 
 # for log
 logs/*
+
+# for test
+test.py
