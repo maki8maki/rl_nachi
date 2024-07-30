@@ -11,6 +11,7 @@ from nachi_opennr_msgs.srv import (
     TriggerWithResultCode,
     getGeneralSignal,
     getGeneralSignalResponse,
+    setGeneralSignal,
 )
 from sensor_msgs.msg import Image
 from std_msgs.msg import Float64MultiArray
@@ -25,6 +26,8 @@ SRV_NAME_CLOSE = "nachi_close"
 SRV_NAME_CTRLMOTER_ON = "nachi_ctrl_motor_on"
 SRV_NAME_CTRLMOTER_OFF = "nachi_ctrl_motor_off"
 SRV_NAME_GET_ACSGENERAL_OUTPUT_SIGNAL = "nachi_get_acs_general_output_signal"
+SRV_NAME_SET_ACSGENERAL_OUTPUT_SIGNAL = "nachi_set_acs_general_output_signal"
+VALVE_GENERAL_OUTPUT_NUMBER = 1
 MOVING_GENERAL_OUTPUT_NUMBER = 26
 NR_E_NORMAL = 0
 
@@ -251,6 +254,22 @@ class NachiEnv:
         )
         self.set_angle_action(target)
 
+    def set_valve_state(self, state: int):
+        """
+        state: int, If  state is1, valve on (= suction), else if state is 0 valve off
+        """
+        assert state == 1 or state == 0, f"state must be 1 or 0, state: {state}"
+
+        self.call_service(
+            SRV_NAME_SET_ACSGENERAL_OUTPUT_SIGNAL, setGeneralSignal, [state], VALVE_GENERAL_OUTPUT_NUMBER, 1
+        )
+
+    def set_valve_on(self):
+        self.set_valve_state(1)
+
+    def set_valve_off(self):
+        self.set_valve_state(0)
+
     def is_moving(self) -> bool:
         response = self.call_service(
             SRV_NAME_GET_ACSGENERAL_OUTPUT_SIGNAL, getGeneralSignal, MOVING_GENERAL_OUTPUT_NUMBER, 1
@@ -283,6 +302,9 @@ class NachiEnv:
             return None
 
     def close(self):
+        # バルブをオフにする
+        self.set_valve_off()
+
         # 待機位置に移動する
         self.set_waiting_position()
 
