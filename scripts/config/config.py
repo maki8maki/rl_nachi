@@ -160,4 +160,7 @@ class SB3Config:
         cfg.fe.model.to(device=cfg.device)
         cfg.fe.model.load_state_dict(th.load(os.path.join(MODEL_DIR, cfg.fe.model_name), map_location=cfg.device))
         cfg.model.to(device=cfg.device)
+
+        th.save(cfg.fe.model.state_dict(), os.path.join(cfg.output_dir, cfg.fe.model_name))
+        cfg.model.save(os.path.join(cfg.output_dir, f"{cfg.basename}.zip"))
         return cfg
