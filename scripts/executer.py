@@ -62,7 +62,7 @@ class Executer:
         tensor_image = th.tensor(self.cfg.fe.trans(normalized_img), dtype=th.float, device=self.cfg.device)
         self.writer.add_image("rgb/original/transformed", tensor_image[:3], self.steps)
         self.writer.add_image("depth/original/transformed", tensor_image[3:], self.steps)
-        hidden_state, recon_imgs = self.fe_model.forward(tensor_image, return_pred=True)
+        hidden_state, recon_imgs = self.fe_model.forward(tensor_image.unsqueeze(0), return_pred=True)
         state = np.concatenate([hidden_state.cpu().squeeze().detach().numpy(), normalized_rs[: self.cfg.rl.obs_dim]])
 
         # log
@@ -152,7 +152,7 @@ class SB3Executer(Executer):
         tensor_image = th.tensor(self.cfg.fe.trans(normalized_img), dtype=th.float, device=self.cfg.device)
         self.writer.add_image("rgb/original", tensor_image[:3], self.steps)
         self.writer.add_image("depth/original", tensor_image[3:], self.steps)
-        hidden_state, recon_imgs = self.fe_model.forward(tensor_image, return_pred=True)
+        hidden_state, recon_imgs = self.fe_model.forward(tensor_image.unsqueeze(0), return_pred=True)
         state = np.concatenate([hidden_state.cpu().squeeze().detach().numpy(), normalized_rs])
 
         # log
