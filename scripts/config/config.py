@@ -10,6 +10,7 @@ from absl import logging
 from agents import utils
 from agents.DCAE import DCAE
 from agents.SAC import SAC
+from gymnasium.spaces import Box
 from hydra._internal.utils import _locate
 from omegaconf import OmegaConf
 from stable_baselines3.common.base_class import BaseAlgorithm
@@ -147,8 +148,12 @@ class SB3Config:
             posture_random = "r"
         else:
             posture_random = "s"
+        self.basename += f"_{position_random}{posture_random}"
         obj = _locate(model_class)
-        algo: BaseAlgorithm = obj.load(os.path.join(MODEL_DIR, "best_model"))
+        algo: BaseAlgorithm = obj.load(
+            os.path.join(MODEL_DIR, self.basename),
+            custom_objects={"action_space": Box(-1.0, 1.0, (6,))},
+        )
         self.model = algo.policy
         self.fe.model_name = self.fe.model_name.replace(".pth", f"_{position_random}{posture_random}_{init}.pth")
         self.output_dir = hydra.core.hydra_config.HydraConfig.get().runtime.output_dir
