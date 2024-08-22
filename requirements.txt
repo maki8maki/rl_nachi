@@ -14,6 +14,8 @@ dill
 imageio
 PyQt6
 
+stable-baselines3[extra]
+
 # For ROS
 # trollius
 # rosdep
