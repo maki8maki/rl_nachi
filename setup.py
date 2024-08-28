@@ -37,6 +37,7 @@ setup(
         "console_scripts": [
             "main = rl_nachi.main:main",
             "sb3 = rl_nachi.sb3:main",
+            "env = rl_nachi.env:main",
         ],
     },
 )

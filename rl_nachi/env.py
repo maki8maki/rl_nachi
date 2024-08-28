@@ -56,30 +56,17 @@ class NachiEnv(Node):
     def __init__(self):
         super().__init__(self.__class__.__name__)
 
-        # 接続開始
-        response = self.call_service(
-            SRV_NAME_OPEN, TriggerWithResultCode, TriggerWithResultCode.Request(), use_future=True
-        )
-        assert response is not None
-
-        # モータをオンにする
-        response = self.call_service(
-            SRV_NAME_CTRLMOTER_ON, TriggerWithResultCode, TriggerWithResultCode.Request(), use_future=True
-        )
-        assert response is not None
-
         # 位置姿勢取得の準備
         self.tf_buffer = Buffer()
         self.tf_listener = TransformListener(self.tf_buffer, self)
         self.tool_pose = np.zeros((6,), dtype=np.float64)
         self.flange_pose = np.zeros((7,), dtype=np.float64)  # x, y, z, quat
-        self.tf_timer = self.create_timer(1.0 / 100, self.update_robot_state)
 
         # 画像取得・表示の準備
         self.bridge = CvBridge()
         cv2.namedWindow("Images")
-        self.rgb_image = np.zeros((IMAGE_HEIGHT, IMAGE_WIDTH, 3), dtype=np.uint8)
-        self.depth_image = np.zeros((IMAGE_HEIGHT, IMAGE_WIDTH), dtype=np.uint8)
+        self.rgb_image = np.ones((IMAGE_HEIGHT, IMAGE_WIDTH, 3), dtype=np.uint8)
+        self.depth_image = np.ones((IMAGE_HEIGHT, IMAGE_WIDTH), dtype=np.uint8)
         self.rgbd_image_sub = self.create_subscription(RGBD, RGBD_IMAGE_TOPIC_NAME, self.rgbd_image_callback, 1)
 
         # 動作指令の準備
@@ -97,8 +84,19 @@ class NachiEnv(Node):
         )
 
         self.check_all_systems_ready()
+        self.tf_timer = self.create_timer(1.0 / 20, self.update_robot_state)
 
-        self.running = True
+        # 接続開始
+        response = self.call_service(
+            SRV_NAME_OPEN, TriggerWithResultCode, TriggerWithResultCode.Request(), use_future=True
+        )
+        assert response is not None
+
+        # モータをオンにする
+        response = self.call_service(
+            SRV_NAME_CTRLMOTER_ON, TriggerWithResultCode, TriggerWithResultCode.Request(), use_future=True
+        )
+        assert response is not None
 
     def rgbd_image_callback(self, data: RGBD):
         try:
@@ -142,7 +140,7 @@ class NachiEnv(Node):
     def check_transform_ready(self):
         self.get_logger().debug(f"Waiting for transform from {BASE_LINK_NAME} to {TOOL_LINK_NAME} to be ready...")
         future = self.tf_buffer.wait_for_transform_async(BASE_LINK_NAME, TOOL_LINK_NAME, rclpy.time.Time())
-        rclpy.spin_until_future_complete(self, future, timeout_sec=2.0)
+        rclpy.spin_until_future_complete(self, future)
         self.get_logger().debug(f"transform from {BASE_LINK_NAME} to {TOOL_LINK_NAME} Ready")
         self.update_robot_state()
         self.get_logger().info("All Transform Ready")
@@ -166,16 +164,13 @@ class NachiEnv(Node):
         self.get_logger().debug("position_command_pub Connected")
 
     def update_robot_state(self):
-        now = self.get_clock().now()
-        future = self.tf_buffer.wait_for_transform_async(BASE_LINK_NAME, TOOL_LINK_NAME, now)
-        rclpy.spin_until_future_complete(self, future, timeout_sec=0.5)
         try:
             # tool
-            data = self.tf_buffer.lookup_transform(BASE_LINK_NAME, TOOL_LINK_NAME, now)
+            data = self.tf_buffer.lookup_transform(BASE_LINK_NAME, TOOL_LINK_NAME, rclpy.time.Time())
             trans = data.transform.translation
             trans = [trans.x, trans.y, trans.z]
             quat = data.transform.rotation
-            quat = [quat.w, quat.x, quat.y, quat.z]  # rosとmujocoでクォータニオンの形式が異な
+            quat = [quat.w, quat.x, quat.y, quat.z]  # rosとmujocoでクォータニオンの形式が異なる
 
             euler = rot.quat2euler(quat)  # rad
 
@@ -183,7 +178,8 @@ class NachiEnv(Node):
             self.tool_pose[3:] = np.array(euler, dtype=np.float64)
 
             # flange
-            data = self.tf_buffer.lookup_transform(BASE_LINK_NAME, FLANGE_LINK_NAME, now)
+            # set_actionと合わせて改善したほうがいい
+            data = self.tf_buffer.lookup_transform(BASE_LINK_NAME, FLANGE_LINK_NAME, rclpy.time.Time())
             trans = data.transform.translation
             trans = [trans.x, trans.y, trans.z]
             self.flange_pose[:3] = np.array(trans, dtype=np.float64)
@@ -336,12 +332,13 @@ class NachiEnv(Node):
         self.destroy_node()
 
 
-if __name__ == "__main__":
-    rclpy.init()
+def main(args=None):
+    rclpy.init(args=args)
     env = NachiEnv()
-    try:
-        rclpy.spin(env)
-    except KeyboardInterrupt:
-        env.close()
-
+    rclpy.spin(env)
+    env.destroy_node()
     rclpy.shutdown()
+
+
+if __name__ == "__main__":
+    main()
