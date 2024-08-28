@@ -1,12 +1,15 @@
 import os
+import threading
 from typing import Tuple
 
 import numpy as np
+import rclpy
 import torch as th
-from config.config import CombConfig, SB3Config
-from env import IMAGE_MAX, IMAGE_MIN, NachiEnv
 from torch.utils.tensorboard import SummaryWriter
-from utils import normalize
+
+from .config import CombConfig, SB3Config
+from .env import IMAGE_MAX, IMAGE_MIN, NachiEnv
+from .utils import normalize
 
 
 class Executer:
@@ -14,6 +17,8 @@ class Executer:
     writer: SummaryWriter
 
     def __init__(self, cfg: CombConfig):
+        rclpy.init()
+
         self.cfg = cfg
         self.writer = SummaryWriter(log_dir=cfg.output_dir)
 
@@ -31,6 +36,7 @@ class Executer:
         self.rl_model.eval()
 
         self.env = NachiEnv()
+        threading.Thread(target=self.env.loop).start()
 
         # その他
         self.steps = 0
@@ -40,7 +46,6 @@ class Executer:
         self.rl_model = self.cfg.rl.model
 
     def get_robot_state(self) -> np.ndarray:
-        self.env.update_robot_state()
         rs = self.env.tool_pose
 
         self.writer.add_tensor("position", th.tensor(rs, dtype=th.float), self.steps)
@@ -55,6 +60,7 @@ class Executer:
         return image
 
     def get_state(self) -> Tuple[np.ndarray, th.Tensor]:
+        rclpy.spin_once(self.env, timeout_sec=0.1)
         img = self.get_image()
         normalized_img = normalize(img, IMAGE_MIN, IMAGE_MAX) * 0.5 + 0.5
         rs = self.get_robot_state()
@@ -99,6 +105,7 @@ class Executer:
         self.writer.flush()
         self.writer.close()
         self.env.close()
+        rclpy.shutdown()
 
     def test_loop(self, loop_num: int):
         for _ in range(loop_num):
@@ -127,6 +134,8 @@ class SB3Executer(Executer):
     cfg: SB3Config
 
     def __init__(self, cfg: SB3Config):
+        rclpy.init()
+
         self.cfg = cfg
         self.writer = SummaryWriter(log_dir=cfg.output_dir)
 
@@ -136,6 +145,7 @@ class SB3Executer(Executer):
         self.rl_model.set_training_mode(False)
 
         self.env = NachiEnv()
+        threading.Thread(target=rclpy.spin, args=(self.env,)).start()
 
         # その他
         self.steps = 0

@@ -2,12 +2,12 @@
 *.pyc
 
 # for params
-scripts/config/**/*.yaml
-!scripts/config/**/defaults.yaml
+rl_nachi/config/**/*.yaml
+!rl_nachi/config/**/defaults.yaml
 
 # for model
-scripts/model/*
-!scripts/model/.gitkeep
+rl_nachi/model/*
+!rl_nachi/model/.gitkeep
 
 # for urdf
 *.dae

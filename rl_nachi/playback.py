@@ -2,9 +2,8 @@
 
 from pathlib import Path
 
-import numpy as np
-import rospy
-from env import NachiEnv
+import numpy as np  # noqa: F401
+import rclpy
 from google.protobuf.json_format import MessageToDict
 from tensorboard.backend.event_processing.event_accumulator import (
     DEFAULT_SIZE_GUIDANCE,
@@ -12,11 +11,13 @@ from tensorboard.backend.event_processing.event_accumulator import (
     EventAccumulator,
     TensorEvent,
 )
-from utils import yes_no_input
+
+from .env import NachiEnv
+from .utils import yes_no_input
 
 
 def playback(log_dir, length=0):
-    rospy.init_node("rl_nachi")
+    rclpy.init()
 
     log_files = [path for path in Path(log_dir).glob("events*") if path.is_file()]
     log_file = log_files[0]
@@ -32,6 +33,8 @@ def playback(log_dir, length=0):
 
     env = NachiEnv()
     env.set_initial_position()
+
+    rate = env.create_rate(2)
 
     if not yes_no_input():
         exit()
@@ -53,10 +56,12 @@ def playback(log_dir, length=0):
             if id >= 5:
                 break
 
-        rospy.sleep(2)
-    except rospy.exceptions.ROSInterruptException:
+        rate.sleep()
+    except KeyboardInterrupt:
         pass
-    env.close()
+    finally:
+        env.close()
+        rclpy.shutdown()
 
 
 if __name__ == "__main__":

@@ -1,7 +1,7 @@
 obs_dim: 6
 act_dim: 6
 _model:
-  _target_: agents.SAC.SAC
+  _target_: rl_nachi.agents.SAC.SAC
   obs_dim: ${obs_dim}
   act_dim: ${act_dim}
   gamma: 0.7

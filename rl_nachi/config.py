@@ -7,16 +7,18 @@ import hydra
 import torch as th
 import torch.nn as nn
 from absl import logging
-from agents import utils
-from agents.DCAE import DCAE
-from agents.SAC import SAC
+from ament_index_python.packages import get_package_share_directory
 from gymnasium.spaces import Box
 from hydra._internal.utils import _locate
 from omegaconf import OmegaConf
 from stable_baselines3.common.base_class import BaseAlgorithm
 from stable_baselines3.common.policies import BasePolicy
 
-MODEL_DIR = os.path.join(os.path.dirname(__file__), "..", "model")
+from .agents import utils
+from .agents.DCAE import DCAE
+from .agents.SAC import SAC
+
+MODEL_DIR = os.path.join(get_package_share_directory("rl_nachi"), "rl_nachi", "model")
 
 
 @dataclasses.dataclass

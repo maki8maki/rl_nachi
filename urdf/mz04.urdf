@@ -12,11 +12,11 @@
                 <mesh filename="package://rl_nachi/urdf/mz04/MZ04-01_BASE.stl" />
             </geometry>
         </collision>
-        <inertial>
+        <!-- <inertial>
             <mass value="0.1" />
             <origin xyz="0 0 0" rpy="0 0 0" />
             <inertia ixx="0.03" iyy="0.03" izz="0.03" ixy="0.0" ixz="0.0" iyz="0.0" />
-        </inertial>
+        </inertial> -->
     </link>
     <link name="J1_link">
         <visual>
@@ -264,8 +264,276 @@
         </actuator>
     </transmission>
 
+    <ros2_control name="mz04" type="system">
+        <hardware>
+            <plugin>nachi_hardware_interface/NachiHardwareInterface</plugin>
+            <!-- HardwareInterface制御周期(Hz) -->
+            <param name="control_rate">20</param>
+            <!-- 起動時の接続有無 0.0以外:起動時に接続を行う 0.0:起動時に接続を行わない -->
+            <param name="init_open_id">1.0</param>
+        </hardware>
+        <joint name="J1_joint">
+            <command_interface name="position" />
+            <state_interface name="angle" />
+            <state_interface name="position" />
+            <state_interface name="effort" />
+        </joint>
+        <joint name="J2_joint">
+            <command_interface name="position" />
+            <state_interface name="angle" />
+            <state_interface name="position" />
+            <state_interface name="effort" />
+        </joint>
+        <joint name="J3_joint">
+            <command_interface name="position" />
+            <state_interface name="angle" />
+            <state_interface name="position" />
+            <state_interface name="effort" />
+        </joint>
+        <joint name="J4_joint">
+            <command_interface name="position" />
+            <state_interface name="angle" />
+            <state_interface name="position" />
+            <state_interface name="effort" />
+        </joint>
+        <joint name="J5_joint">
+            <command_interface name="position" />
+            <state_interface name="angle" />
+            <state_interface name="position" />
+            <state_interface name="effort" />
+        </joint>
+        <joint name="J6_joint">
+            <command_interface name="position" />
+            <state_interface name="angle" />
+            <state_interface name="position" />
+            <state_interface name="effort" />
+        </joint>
+        <joint name="ctrl_move_x_x">
+            <command_interface name="position" />
+            <state_interface name="angle" />
+            <state_interface name="position" />
+            <state_interface name="effort" />
+        </joint>
+        <joint name="ctrl_move_x_y">
+            <command_interface name="position" />
+            <state_interface name="angle" />
+            <state_interface name="position" />
+            <state_interface name="effort" />
+        </joint>
+        <joint name="ctrl_move_x_z">
+            <command_interface name="position" />
+            <state_interface name="angle" />
+            <state_interface name="position" />
+            <state_interface name="effort" />
+        </joint>
+        <joint name="ctrl_move_x_roll">
+            <command_interface name="position" />
+            <state_interface name="angle" />
+            <state_interface name="position" />
+            <state_interface name="effort" />
+        </joint>
+        <joint name="ctrl_move_x_pitch">
+            <command_interface name="position" />
+            <state_interface name="angle" />
+            <state_interface name="position" />
+            <state_interface name="effort" />
+        </joint>
+        <joint name="ctrl_move_x_yaw">
+            <command_interface name="position" />
+            <state_interface name="angle" />
+            <state_interface name="position" />
+            <state_interface name="effort" />
+        </joint>
+        <gpio name="service_command">
+            <command_interface name="service" />
+        </gpio>
+        <gpio name="gpio_start_id">
+            <command_interface name="service" />
+        </gpio>
+        <gpio name="gpio_count_id">
+            <command_interface name="service" />
+        </gpio>
+        <gpio name="setting_signal_1">
+            <command_interface name="service" />
+        </gpio>
+        <gpio name="setting_signal_2">
+            <command_interface name="service" />
+        </gpio>
+        <gpio name="setting_signal_3">
+            <command_interface name="service" />
+        </gpio>
+        <gpio name="setting_signal_4">
+            <command_interface name="service" />
+        </gpio>
+        <gpio name="setting_signal_5">
+            <command_interface name="service" />
+        </gpio>
+        <gpio name="setting_signal_6">
+            <command_interface name="service" />
+        </gpio>
+        <gpio name="setting_signal_7">
+            <command_interface name="service" />
+        </gpio>
+        <gpio name="setting_signal_8">
+            <command_interface name="service" />
+        </gpio>
+        <gpio name="setting_signal_9">
+            <command_interface name="service" />
+        </gpio>
+        <gpio name="setting_signal_10">
+            <command_interface name="service" />
+        </gpio>
+        <gpio name="setting_signal_11">
+            <command_interface name="service" />
+        </gpio>
+        <gpio name="setting_signal_12">
+            <command_interface name="service" />
+        </gpio>
+        <gpio name="setting_signal_13">
+            <command_interface name="service" />
+        </gpio>
+        <gpio name="setting_signal_14">
+            <command_interface name="service" />
+        </gpio>
+        <gpio name="setting_signal_15">
+            <command_interface name="service" />
+        </gpio>
+        <gpio name="setting_signal_16">
+            <command_interface name="service" />
+        </gpio>
+        <gpio name="setting_signal_17">
+            <command_interface name="service" />
+        </gpio>
+        <gpio name="setting_signal_18">
+            <command_interface name="service" />
+        </gpio>
+        <gpio name="setting_signal_19">
+            <command_interface name="service" />
+        </gpio>
+        <gpio name="setting_signal_20">
+            <command_interface name="service" />
+        </gpio>
+        <gpio name="setting_signal_21">
+            <command_interface name="service" />
+        </gpio>
+        <gpio name="setting_signal_22">
+            <command_interface name="service" />
+        </gpio>
+        <gpio name="setting_signal_23">
+            <command_interface name="service" />
+        </gpio>
+        <gpio name="setting_signal_24">
+            <command_interface name="service" />
+        </gpio>
+        <gpio name="setting_signal_25">
+            <command_interface name="service" />
+        </gpio>
+        <gpio name="setting_signal_26">
+            <command_interface name="service" />
+        </gpio>
+        <gpio name="setting_signal_27">
+            <command_interface name="service" />
+        </gpio>
+        <gpio name="setting_signal_28">
+            <command_interface name="service" />
+        </gpio>
+        <gpio name="setting_signal_29">
+            <command_interface name="service" />
+        </gpio>
+        <gpio name="setting_signal_30">
+            <command_interface name="service" />
+        </gpio>
+        <gpio name="setting_signal_31">
+            <command_interface name="service" />
+        </gpio>
+        <gpio name="setting_signal_32">
+            <command_interface name="service" />
+        </gpio>
+        <gpio name="pc_addrs_1">
+            <command_interface name="service" />
+        </gpio>
+        <gpio name="pc_addrs_2">
+            <command_interface name="service" />
+        </gpio>
+        <gpio name="pc_addrs_3">
+            <command_interface name="service" />
+        </gpio>
+        <gpio name="pc_addrs_4">
+            <command_interface name="service" />
+        </gpio>
+        <gpio name="l_port_no">
+            <command_interface name="service" />
+        </gpio>
+        <gpio name="l_retry">
+            <command_interface name="service" />
+        </gpio>
+        <gpio name="l_send_timeout">
+            <command_interface name="service" />
+        </gpio>
+        <gpio name="l_comm_side">
+            <command_interface name="service" />
+        </gpio>
+        <gpio name="l_mode">
+            <command_interface name="service" />
+        </gpio>
+        <gpio name="l_kind">
+            <command_interface name="service" />
+        </gpio>
+        <gpio name="n_open_id">
+            <command_interface name="service" />
+        </gpio>
+        <gpio name="n_sub_id">
+            <command_interface name="service" />
+        </gpio>
+        <gpio name="n_count_joint">
+            <command_interface name="service" />
+        </gpio>
+        <gpio name="n_count_meca">
+            <command_interface name="service" />
+        </gpio>
+        <gpio name="n_priority">
+            <command_interface name="service" />
+        </gpio>
+        <gpio name="f_thereshold">
+            <command_interface name="service" />
+        </gpio>
+        <gpio name="n_unit_id">
+            <command_interface name="service" />
+        </gpio>
+        <gpio name="n_type">
+            <command_interface name="service" />
+        </gpio>
+        <gpio name="n_conf">
+            <command_interface name="service" />
+        </gpio>
+        <gpio name="f_ext_pose_no_1">
+            <command_interface name="service" />
+        </gpio>
+        <gpio name="f_ext_pose_no_2">
+            <command_interface name="service" />
+        </gpio>
+        <gpio name="f_ext_pose_no_3">
+            <command_interface name="service" />
+        </gpio>
+        <gpio name="f_ext_pose_no_4">
+            <command_interface name="service" />
+        </gpio>
+        <gpio name="f_ext_pose_no_5">
+            <command_interface name="service" />
+        </gpio>
+        <gpio name="f_ext_pose_no_6">
+            <command_interface name="service" />
+        </gpio>
+        <gpio name="n_ext_pos_size">
+            <command_interface name="service" />
+        </gpio>
+        <gpio name="servomotor_state">
+            <state_interface name="on_off" />
+        </gpio>
+    </ros2_control>
+
     <gazebo>
-        <plugin name="gazebo_ros_control">
+        <plugin name="gazebo_ros2_control">
             <robotNamespace>/</robotNamespace>
         </plugin>
     </gazebo>
