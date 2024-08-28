@@ -41,7 +41,7 @@ TOOL_LINK_NAME = "tool_link"
 # RGB-Dカメラに関連する定数
 RGBD_IMAGE_TOPIC_NAME = "/camera/camera/rgbd"
 DEPTH_MIN = 70  # mm
-DEPTH_NAX = 500  # mm
+DEPTH_MAX = 500  # mm
 IMAGE_MIN = 0
 IMAGE_MAX = 255
 IMAGE_WIDTH = 848
@@ -108,8 +108,8 @@ class NachiEnv(Node):
 
             # depth
             depth_image = self.bridge.imgmsg_to_cv2(data.depth, data.depth.encoding)
-            depth_image[(depth_image > DEPTH_NAX) | (depth_image < DEPTH_MIN)] = 0
-            depth_image = depth_image * 255.0 / DEPTH_NAX
+            depth_image[(depth_image > DEPTH_MAX) | (depth_image < DEPTH_MIN)] = 0
+            depth_image = depth_image * 255.0 / DEPTH_MAX
             self.depth_image = depth_image.astype(np.uint8)
 
             print(depth_image.shape)
