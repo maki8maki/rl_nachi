@@ -1,6 +1,5 @@
 defaults:
   - fe: defaults
-  - rl: defaults
   - _self_
 
 hydra:
@@ -11,6 +10,6 @@ position_random: False
 posture_random: False
 device: cuda
 
-basename: SAC_trainedDCAE_o-${rl.obs_dim}_a-${rl.act_dim}
+basename: SAC_trainedDCAE
 
 fe_with_init: True

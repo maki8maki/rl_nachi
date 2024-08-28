@@ -9,7 +9,7 @@ import torch.nn as nn
 from absl import logging
 from agents import utils
 from agents.DCAE import DCAE
-from agents.SAC import SAC
+from env import NachiEnv
 from gymnasium.spaces import Box
 from hydra._internal.utils import _locate
 from omegaconf import OmegaConf
@@ -52,28 +52,12 @@ class FEConfig:
 
 
 @dataclasses.dataclass
-class RLConfig:
-    obs_dim: int = 6
-    act_dim: int = 6
-    _model: dataclasses.InitVar[dict] = None
-    model: utils.RL = dataclasses.field(default=None)
-
-    def __post_init__(self, _model):
-        if _model is None:
-            self.model = SAC(obs_dim=self.obs_dim, act_dim=self.act_dim)
-
-    def convert(self, _cfg: OmegaConf):
-        self_copy = deepcopy(self)
-        if _cfg._model:
-            self_copy.model = hydra.utils.instantiate(_cfg._model)
-        return self_copy
-
-
-@dataclasses.dataclass
 class CombConfig:
     fe: FEConfig
-    rl: RLConfig
     basename: str
+    env: NachiEnv = NachiEnv()
+    _model: dataclasses.InitVar[dict] = None
+    model: utils.RL = dataclasses.field(default=None)
     position_random: bool = False
     posture_random: bool = False
     device: str = "cpu"
@@ -108,13 +92,21 @@ class CombConfig:
     @classmethod
     def convert(cls, _cfg: OmegaConf):
         cfg = dacite.from_dict(data_class=cls, data=OmegaConf.to_container(_cfg))
-        cfg.fe = cfg.fe.convert(OmegaConf.create(_cfg.fe))
-        if _cfg.rl._model:
-            _cfg.rl._model.obs_dim = cfg.rl.obs_dim + cfg.fe.hidden_dim
-        cfg.rl = cfg.rl.convert(OmegaConf.create(_cfg.rl))
-        cfg.fe.model.to(cfg.device)
-        cfg.rl.model.to(cfg.device)
         cfg.basename = _cfg.basename + ("_r" if cfg.position_random else "_s") + ("r" if cfg.posture_random else "s")
+
+        cfg.fe = cfg.fe.convert(OmegaConf.create(_cfg.fe))
+        cfg.fe.model.load_state_dict(th.load(os.path.join(MODEL_DIR, cfg.fe.model_name)))
+        cfg.fe.model.to(cfg.device)
+
+        obs_dim = cfg.env.observation_space.low.size + cfg.fe.hidden_dim
+        act_dim = cfg.env.action_space.low.size
+        cfg.model = hydra.utils.instantiate(_cfg._model, obs_dim=obs_dim, act_dim=act_dim)
+        cfg.model.load_state_dict(th.load(os.path.join(MODEL_DIR, f"{cfg.basename}.pth")))
+        cfg.model.to(cfg.device)
+
+        th.save(cfg.fe.model.state_dict(), os.path.join(cfg.output_dir, cfg.fe.model_name))
+        cfg.model.save(os.path.join(cfg.output_dir, f"{cfg.basename}.pth"))
+
         return cfg
 
 
@@ -122,6 +114,7 @@ class CombConfig:
 class SB3Config:
     fe: FEConfig
     basename: str
+    env: NachiEnv = NachiEnv()
     position_random: bool = False
     posture_random: bool = False
     fe_with_init: dataclasses.InitVar[bool] = True
@@ -162,8 +155,8 @@ class SB3Config:
     def convert(cls, _cfg: OmegaConf):
         cfg = dacite.from_dict(data_class=cls, data=OmegaConf.to_container(_cfg))
         cfg.fe = cfg.fe.convert(OmegaConf.create(_cfg.fe))
+        cfg.fe.model.load_state_dict(th.load(os.path.join(MODEL_DIR, cfg.fe.model_name)))
         cfg.fe.model.to(device=cfg.device)
-        cfg.fe.model.load_state_dict(th.load(os.path.join(MODEL_DIR, cfg.fe.model_name), map_location=cfg.device))
         cfg.model.to(device=cfg.device)
 
         th.save(cfg.fe.model.state_dict(), os.path.join(cfg.output_dir, cfg.fe.model_name))
