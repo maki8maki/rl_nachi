@@ -112,8 +112,6 @@ class NachiEnv(Node):
             depth_image = depth_image * 255.0 / DEPTH_MAX
             self.depth_image = depth_image.astype(np.uint8)
 
-            print(depth_image.shape)
-
             self.update_display(bgr_image=bgr_image)
         except CvBridgeError as e:
             self.get_logger().error(f"Failed to convert RGBD image: {e}")
