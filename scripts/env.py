@@ -80,8 +80,7 @@ class NachiEnv:
 
         # その他
         self.rate = rospy.Rate(100)  # 諸々の待機に利用
-        self.robot_act_dim = 6
-        self.action_space = spaces.Box(low=-1.0, high=1.0, shape=(self.robot_act_dim,))
+        self.action_space = spaces.Box(low=-1.0, high=1.0, shape=(6,))
         self.observation_space = spaces.Box(
             low=np.array([-0.0, -1.0, -0.0, -np.pi, -np.pi, -np.pi]),
             high=np.array([2.0, 1.0, 2.0, np.pi, np.pi, np.pi]),

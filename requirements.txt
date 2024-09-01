@@ -14,12 +14,14 @@ dill
 imageio
 PyQt6
 
+stable-baselines3[extra]
+
 # For ROS
-trollius
-rosdep
-rosinstall-generator
-wstool
-rosinstall
-defusedxml
-netifaces
-setuptools
+# trollius
+# rosdep
+# rosinstall-generator
+# wstool
+# rosinstall
+# defusedxml
+# netifaces
+# setuptools
