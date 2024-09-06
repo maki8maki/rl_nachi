@@ -53,14 +53,6 @@ SHIFT_MAX = np.array([580.0, 300.0, 600.0, 30.0, 90.0, 90.0])  # mm, deg
 
 class NachiEnv:
     def __init__(self):
-        # 接続開始
-        response = self.call_service(SRV_NAME_OPEN, TriggerWithResultCode)
-        assert response is not None
-
-        # モータをオンにする
-        response = self.call_service(SRV_NAME_CTRLMOTER_ON, TriggerWithResultCode)
-        assert response is not None
-
         # 位置姿勢取得の準備
         self.tf_listener = tf.TransformListener()
         self.tool_pose: np.ndarray = np.zeros((6,), dtype=np.float64)
@@ -88,6 +80,14 @@ class NachiEnv:
         )
 
         self.check_all_systems_ready()
+
+        # 接続開始
+        response = self.call_service(SRV_NAME_OPEN, TriggerWithResultCode)
+        assert response is not None
+
+        # モータをオンにする
+        response = self.call_service(SRV_NAME_CTRLMOTER_ON, TriggerWithResultCode)
+        assert response is not None
 
     def rgb_image_callback(self, data: Image):
         try:
