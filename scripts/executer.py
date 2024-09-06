@@ -4,7 +4,7 @@ from typing import Tuple
 import numpy as np
 import torch as th
 from config.config import CombConfig, SB3Config
-from env import IMAGE_MAX, IMAGE_MIN
+from env import IMAGE_MAX, IMAGE_MIN, NachiEnv
 from torch.utils.tensorboard import SummaryWriter
 from utils import normalize
 
@@ -30,7 +30,7 @@ class Executer:
         self.fe_model.eval()
         self.rl_model.eval()
 
-        self.env = cfg.env
+        self.env = NachiEnv()
 
         # その他
         self.steps = 0
@@ -133,7 +133,7 @@ class SB3Executer(Executer):
         self.fe_model.eval()
         self.rl_model.set_training_mode(False)
 
-        self.env = cfg.env
+        self.env = NachiEnv()
 
         # その他
         self.steps = 0

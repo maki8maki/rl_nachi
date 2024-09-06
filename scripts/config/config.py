@@ -9,7 +9,6 @@ import torch.nn as nn
 from absl import logging
 from agents import utils
 from agents.DCAE import DCAE
-from env import NachiEnv
 from gymnasium.spaces import Box
 from hydra._internal.utils import _locate
 from omegaconf import OmegaConf
@@ -55,7 +54,6 @@ class FEConfig:
 class CombConfig:
     fe: FEConfig
     basename: str
-    env: NachiEnv = NachiEnv()
     _model: dataclasses.InitVar[dict] = None
     model: utils.RL = dataclasses.field(default=None)
     position_random: bool = False
@@ -114,7 +112,6 @@ class CombConfig:
 class SB3Config:
     fe: FEConfig
     basename: str
-    env: NachiEnv = NachiEnv()
     position_random: bool = False
     posture_random: bool = False
     fe_with_init: dataclasses.InitVar[bool] = True
