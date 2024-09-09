@@ -26,7 +26,7 @@ def main(_cfg: OmegaConf):
     if not yes_no_input():
         exit()
 
-    executer.test(10)
+    executer.test(15)
 
 
 if __name__ == "__main__":
