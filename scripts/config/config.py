@@ -1,6 +1,8 @@
 import dataclasses
+import importlib
 import os
 from copy import deepcopy
+from typing import Optional, Type
 
 import dacite
 import hydra
@@ -10,7 +12,6 @@ from absl import logging
 from agents import utils
 from agents.DCAE import DCAE
 from gymnasium.spaces import Box
-from hydra._internal.utils import _locate
 from omegaconf import OmegaConf
 from stable_baselines3.common.base_class import BaseAlgorithm
 from stable_baselines3.common.policies import BasePolicy
@@ -30,7 +31,7 @@ class FEConfig:
     _trans: dataclasses.InitVar[dict] = None
     trans: nn.Module = dataclasses.field(default=None, repr=False)
 
-    def __post_init__(self, _model, _trans):
+    def __post_init__(self, _model: Optional[dict], _trans: Optional[dict]):
         if _model is None:
             self.model = DCAE(
                 img_height=self.img_height,
@@ -62,7 +63,7 @@ class CombConfig:
     fe_with_init: dataclasses.InitVar[bool] = True
     output_dir: str = dataclasses.field(default=None)
 
-    def __post_init__(self, fe_with_init):
+    def __post_init__(self, fe_with_init: bool):
         if self.device == "cpu":
             logging.warning("You are using CPU!!")
         if self.device == "cuda" and not th.cuda.is_available():
@@ -120,7 +121,7 @@ class SB3Config:
     model: BasePolicy = dataclasses.field(default=None, repr=False)
     output_dir: str = dataclasses.field(default=None)
 
-    def __post_init__(self, fe_with_init, model_class):
+    def __post_init__(self, fe_with_init: bool, model_class: str):
         if self.device == "cpu":
             logging.warning("You are using CPU!!")
         if self.device == "cuda" and not th.cuda.is_available():
@@ -139,9 +140,11 @@ class SB3Config:
         else:
             posture_random = "s"
         self.basename += f"_{position_random}{posture_random}"
-        obj = _locate(model_class)
-        algo: BaseAlgorithm = obj.load(
-            os.path.join(MODEL_DIR, self.basename),
+        module_name, class_name = model_class.rsplit(".", 1)
+        module = importlib.import_module(module_name)
+        cls: Type[BaseAlgorithm] = getattr(module, class_name)
+        algo: BaseAlgorithm = cls.load(
+            path=os.path.join(MODEL_DIR, self.basename),
             custom_objects={"action_space": Box(-1.0, 1.0, (6,))},
         )
         self.model = algo.policy
