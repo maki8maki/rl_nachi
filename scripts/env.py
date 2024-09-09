@@ -60,7 +60,7 @@ class NachiEnv:
 
         # 画像取得・表示の準備
         self.bridge = CvBridge()
-        cv2.namedWindow("Images")
+        # cv2.namedWindow("Images")
         self.rgb_image = np.zeros((IMAGE_HEIGHT, IMAGE_WIDTH, 3), dtype=np.uint8)
         self.depth_image = np.zeros((IMAGE_HEIGHT, IMAGE_WIDTH), dtype=np.uint8)
         self.rgb_image_sub = rospy.Subscriber(RGB_IMAGE_TOPIC_NAME, Image, self.rgb_image_callback, queue_size=1)
@@ -93,7 +93,7 @@ class NachiEnv:
         try:
             bgr_image = self.bridge.imgmsg_to_cv2(data, "bgr8")
             self.rgb_image = cv2.cvtColor(bgr_image, cv2.COLOR_BGR2RGB)
-            self.update_display(bgr_image=bgr_image)
+            # self.update_display(bgr_image=bgr_image)
         except CvBridgeError as e:
             rospy.logerr(f"Failed to convert RGB image: {e}")
 
@@ -130,14 +130,14 @@ class NachiEnv:
 
     def check_rgb_image_ready(self):
         rospy.logdebug(f"Waiting for {RGB_IMAGE_TOPIC_NAME} to be ready...")
-        data = rospy.wait_for_message(RGB_IMAGE_TOPIC_NAME, Image)
-        self.rgb_image_callback(data)
+        rospy.wait_for_message(RGB_IMAGE_TOPIC_NAME, Image)
+        # self.rgb_image_callback(data)
         rospy.logdebug(f"{RGB_IMAGE_TOPIC_NAME} Ready")
 
     def check_depth_image_ready(self):
         rospy.logdebug(f"Waiting for {DEPTH_IMAGE_TOPIC_NAME} to be ready...")
-        data = rospy.wait_for_message(DEPTH_IMAGE_TOPIC_NAME, Image)
-        self.depth_image_callback(data)
+        rospy.wait_for_message(DEPTH_IMAGE_TOPIC_NAME, Image)
+        # self.depth_image_callback(data)
         rospy.logdebug(f"{DEPTH_IMAGE_TOPIC_NAME} Ready")
 
     def check_transform_ready(self):
