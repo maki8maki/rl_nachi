@@ -24,7 +24,7 @@ def main():
     images = []
     poses = []
 
-    while len(images) < 3:
+    while len(images) < 100:
         try:
             env.set_action(np.random.uniform(-1.0, 1.0, (6,)))
             img = np.concatenate([env.rgb_image, np.expand_dims(env.depth_image, 2)], axis=2)
