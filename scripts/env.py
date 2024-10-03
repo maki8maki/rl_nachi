@@ -188,6 +188,8 @@ class NachiEnv:
             rospy.logdebug(f"Error during update_robot_state: {e}")
 
     def set_action(self, action: np.ndarray):
+        self.update_robot_state()
+
         action = np.clip(action.copy(), -1, 1)
 
         # unscale
@@ -219,7 +221,9 @@ class NachiEnv:
 
     def set_position_action(self, target: np.ndarray):
         assert target.shape == (6,)
-        assert (SHIFT_MIN <= target).all() and (target <= SHIFT_MAX).all(), target
+        assert (SHIFT_MIN <= target).all() and (
+            target <= SHIFT_MAX
+        ).all(), f"position target is out of range. target: {target}"
         msg = Float64MultiArray()
         msg.data = target
         self.position_command_pub.publish(msg)
