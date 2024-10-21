@@ -1,5 +1,4 @@
 import os
-from typing import Tuple
 
 import numpy as np
 import torch as th
@@ -54,7 +53,7 @@ class Executer:
         self.writer.add_image("depth/original/raw", depth, self.steps, dataformats="HW")
         return image
 
-    def get_state(self) -> Tuple[np.ndarray, th.Tensor]:
+    def get_state(self) -> np.ndarray:
         img = self.get_image()
         normalized_img = normalize(img, IMAGE_MIN, IMAGE_MAX) * 0.5 + 0.5
         rs = self.get_robot_state()
