@@ -53,21 +53,25 @@ class Executer:
         self.writer.add_image("depth/original/raw", depth, self.steps, dataformats="HW")
         return image
 
+    def get_tensor_image(self, img: np.ndarray) -> th.Tensor:
+        tensor_image = th.tensor(self.cfg.fe.trans(img), dtype=th.float, device=self.cfg.device)
+        self.logging_image("rgb/original", tensor_image[:3])
+        self.logging_image("depth/original", tensor_image[3:])
+        return tensor_image
+
     def get_state(self) -> np.ndarray:
         img = self.get_image()
-        normalized_img = normalize(img, IMAGE_MIN, IMAGE_MAX) * 0.5 + 0.5
+        normalized_img = normalize(img, IMAGE_MIN, IMAGE_MAX)
         rs = self.get_robot_state()
         normalized_rs = normalize(rs, self.env.observation_space.low, self.env.observation_space.high)
-        tensor_image = th.tensor(self.cfg.fe.trans(normalized_img), dtype=th.float, device=self.cfg.device)
-        self.writer.add_image("rgb/original", tensor_image[:3], self.steps)
-        self.writer.add_image("depth/original", tensor_image[3:], self.steps)
+        tensor_image = self.get_tensor_image(normalized_img)
         hidden_state, recon_imgs = self.fe_model.forward(tensor_image.unsqueeze(0), return_pred=True)
         state = np.concatenate([hidden_state.cpu().squeeze().detach().numpy(), normalized_rs])
 
         # log
         recon_imgs = recon_imgs.squeeze()
-        self.writer.add_image("rgb/reconstructed", recon_imgs[:3], self.steps)
-        self.writer.add_image("depth/reconstructed", recon_imgs[3:], self.steps)
+        self.logging_image("rgb/reconstructed", recon_imgs[:3])
+        self.logging_image("depth/reconstructed", recon_imgs[3:])
         return state
 
     def set_action(self, action: np.ndarray):
@@ -82,6 +86,9 @@ class Executer:
 
     def is_done(self) -> bool:
         pass
+
+    def logging_image(self, tag: str, img: th.Tensor):
+        self.writer.add_image(tag, img * 0.5 + 0.5, self.steps)
 
     def main_loop(self):
         done = False
