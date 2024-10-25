@@ -1,0 +1,5 @@
+_model:
+  _target_: agents.CycleGAN.FeatureExtractionCycleGAN
+  is_train: False
+
+model_name: FE_CycleGAN_VAE.pth

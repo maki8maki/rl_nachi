@@ -10,6 +10,7 @@ import torch as th
 import torch.nn as nn
 from absl import logging
 from agents import utils
+from agents.CycleGAN import FeatureExtractionCycleGAN
 from agents.DCAE import DCAE
 from gymnasium.spaces import Box
 from omegaconf import OmegaConf
@@ -161,4 +162,86 @@ class SB3Config:
 
         th.save(cfg.fe.model.state_dict(), os.path.join(cfg.output_dir, cfg.fe.model_name))
         cfg.model.save(os.path.join(cfg.output_dir, f"{cfg.basename}.zip"))
+        return cfg
+
+
+@dataclasses.dataclass
+class DAConfig:
+    model_name: str
+    _model: dataclasses.InitVar[dict]
+    model: FeatureExtractionCycleGAN = dataclasses.field(default=False)
+
+    def convert(self, _cfg: OmegaConf, img_channel: int):
+        self_copy = deepcopy(self)
+
+        self_copy.model = hydra.utils.instantiate(
+            _cfg._model,
+            input_channel=img_channel,
+            output_channel=img_channel,
+            is_train=False,
+        )
+        self_copy.model.load(os.path.join(MODEL_DIR, self_copy.model_name))
+
+        return self_copy
+
+
+@dataclasses.dataclass
+class SB3DAConfig:
+    da: DAConfig
+    fe: FEConfig
+    basename: str
+    model_name: str
+    position_random: bool = False
+    posture_random: bool = False
+    fe_with_init: dataclasses.InitVar[bool] = True
+    device: str = "cpu"
+    model_class: dataclasses.InitVar[str] = "stable_baselines3.SAC"
+    model: BasePolicy = dataclasses.field(default=None, repr=False)
+    output_dir: str = dataclasses.field(default=None)
+
+    def __post_init__(self, fe_with_init: bool, model_class: str):
+        if self.device == "cpu":
+            logging.warning("You are using CPU!!")
+        if self.device == "cuda" and not th.cuda.is_available():
+            self.device = "cpu"
+            logging.warning("Device changed to CPU!!")
+        if fe_with_init:
+            init = "w-init"
+        else:
+            init = "wo-init"
+        if self.position_random:
+            position_random = "r"
+        else:
+            position_random = "s"
+        if self.posture_random:
+            posture_random = "r"
+        else:
+            posture_random = "s"
+        self.model_name += f"_{position_random}{posture_random}"
+        module_name, class_name = model_class.rsplit(".", 1)
+        module = importlib.import_module(module_name)
+        cls: Type[BaseAlgorithm] = getattr(module, class_name)
+        algo: BaseAlgorithm = cls.load(
+            path=os.path.join(MODEL_DIR, self.model_name),
+            custom_objects={"action_space": Box(-1.0, 1.0, (6,))},
+        )
+        self.model = algo.policy
+        self.fe.model_name = self.fe.model_name.replace(".pth", f"_{position_random}{posture_random}_{init}.pth")
+        self.output_dir = hydra.core.hydra_config.HydraConfig.get().runtime.output_dir
+
+    @classmethod
+    def convert(cls, _cfg: OmegaConf):
+        cfg = dacite.from_dict(data_class=cls, data=OmegaConf.to_container(_cfg))
+        cfg.fe = cfg.fe.convert(OmegaConf.create(_cfg.fe))
+        cfg.fe.model.load_state_dict(th.load(os.path.join(MODEL_DIR, cfg.fe.model_name)))
+        cfg.fe.model.to(device=cfg.device)
+
+        cfg.da = cfg.da.convert(OmegaConf.create(_cfg.da), cfg.fe.img_channel)
+        cfg.da.model.to(cfg.device)
+
+        cfg.model.to(device=cfg.device)
+
+        th.save(cfg.fe.model.state_dict(), os.path.join(cfg.output_dir, cfg.fe.model_name))
+        cfg.model.save(os.path.join(cfg.output_dir, f"{cfg.model_name}.zip"))
+        cfg.da.model.save(os.path.join(cfg.output_dir, cfg.da.model_name))
         return cfg

@@ -2,7 +2,7 @@ import os
 
 import numpy as np
 import torch as th
-from config.config import CombConfig, SB3Config
+from config.config import CombConfig, SB3Config, SB3DAConfig
 from env import IMAGE_MAX, IMAGE_MIN, NachiEnv
 from torch.utils.tensorboard import SummaryWriter
 from utils import normalize
@@ -164,3 +164,24 @@ class SB3Executer(Executer):
             state = self.get_state()
             ac, _ = self.rl_model.predict(th.tensor(state), deterministic=True)
             self.set_action(ac)
+
+
+class SB3DAExecuter(SB3Executer):
+    cfg: SB3DAConfig
+
+    def __init__(self, cfg: SB3DAConfig):
+        super().__init__(cfg)
+
+        self.da_model.eval()
+
+    def make_aliases(self):
+        super().make_aliases()
+        self.da_model = self.cfg.da.model
+
+    def get_tensor_image(self, img: np.ndarray) -> th.Tensor:
+        tensor_image = super().get_tensor_image(img)
+        fake_sim_img = self.da_model.netG_B(tensor_image.unsqueeze(0))
+        fake_sim_img = fake_sim_img.squeeze()
+        self.logging_image("rgb/fake_sim", fake_sim_img[:3])
+        self.logging_image("depth/fake_sim", fake_sim_img[3:])
+        return fake_sim_img
