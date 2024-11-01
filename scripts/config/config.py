@@ -56,6 +56,7 @@ class FEConfig:
 class CombConfig:
     fe: FEConfig
     basename: str
+    done_threshold: float = 0.15
     _model: dataclasses.InitVar[dict] = None
     model: utils.RL = dataclasses.field(default=None)
     position_random: bool = False
@@ -114,6 +115,7 @@ class CombConfig:
 class SB3Config:
     fe: FEConfig
     basename: str
+    done_threshold: float = 0.15
     position_random: bool = False
     posture_random: bool = False
     fe_with_init: dataclasses.InitVar[bool] = True
@@ -191,6 +193,7 @@ class SB3DAConfig:
     fe: FEConfig
     basename: str
     model_name: str
+    done_threshold: float = 0.15
     position_random: bool = False
     posture_random: bool = False
     fe_with_init: dataclasses.InitVar[bool] = True

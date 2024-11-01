@@ -33,6 +33,7 @@ class Executer:
 
         # その他
         self.steps = 0
+        self.done = False
 
     def make_aliases(self):
         self.fe_model = self.cfg.fe.model
@@ -84,20 +85,18 @@ class Executer:
 
         self.env.set_action(action)
 
-    def is_done(self) -> bool:
-        pass
+        if np.linalg.norm(action) / np.sqrt(6) < self.cfg.done_threshold:
+            self.done = True
 
     def logging_image(self, tag: str, img: th.Tensor):
         self.writer.add_image(tag, img * 0.5 + 0.5, self.steps)
 
     def main_loop(self):
-        done = False
-        while not done:
+        while not self.done:
             self.steps += 1
             state = self.get_state()  # Agent用の状態を取得
             ac = self.rl_model.get_action(state, deterministic=True)
             self.set_action(ac)
-            done = self.is_done()
 
     def close(self):
         self.writer.flush()
@@ -143,19 +142,18 @@ class SB3Executer(Executer):
 
         # その他
         self.steps = 0
+        self.done = False
 
     def make_aliases(self):
         self.fe_model = self.cfg.fe.model
         self.rl_model = self.cfg.model
 
     def main_loop(self):
-        done = False
-        while not done:
+        while not self.done:
             self.steps += 1
             state = self.get_state()  # Agent用の状態を取得
             ac, _ = self.rl_model.predict(th.tensor(state), deterministic=True)
             self.set_action(ac)
-            done = self.is_done()
 
     def test_loop(self, loop_num: int):
         for _ in range(loop_num):
@@ -164,6 +162,8 @@ class SB3Executer(Executer):
             state = self.get_state()
             ac, _ = self.rl_model.predict(th.tensor(state), deterministic=True)
             self.set_action(ac)
+            if self.done:
+                break
 
 
 class SB3DAExecuter(SB3Executer):
