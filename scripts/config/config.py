@@ -115,6 +115,7 @@ class CombConfig:
 class SB3Config:
     fe: FEConfig
     basename: str
+    max_steps: int = 10
     done_threshold: float = 0.15
     position_random: bool = False
     posture_random: bool = False
@@ -193,6 +194,7 @@ class SB3DAConfig:
     fe: FEConfig
     basename: str
     model_name: str
+    max_steps: int = 10
     done_threshold: float = 0.15
     position_random: bool = False
     posture_random: bool = False

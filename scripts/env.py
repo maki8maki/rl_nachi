@@ -203,6 +203,17 @@ class NachiEnv:
         # 指令の送信
         self.set_position_action(target)
 
+    def grasp(self, z_diff=-0.002):
+        self.update_robot_state()
+        diff = np.array([0.0, 0.0, z_diff])
+        mat = rot.euler2mat(self.tool_pose[3:])
+        tgt_diff = mat @ diff
+        pos_target = self.tool_pose[:3] + tgt_diff
+        rot_target = self.tool_pose[3:]
+        rot_target[0], rot_target[2] = rot_target[2], rot_target[0]
+        target = np.concatenate([pos_target * 1000, np.rad2deg(rot_target)])
+        self.set_position_action(target)
+
     def set_angle_action(self, target: np.ndarray):
         assert target.shape == (6,)
         msg = Float64MultiArray()

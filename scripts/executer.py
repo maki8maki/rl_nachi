@@ -149,11 +149,14 @@ class SB3Executer(Executer):
         self.rl_model = self.cfg.model
 
     def main_loop(self):
-        while not self.done:
+        while (not self.done) and self.steps < self.cfg.max_steps:
             self.steps += 1
             state = self.get_state()  # Agent用の状態を取得
             ac, _ = self.rl_model.predict(th.tensor(state), deterministic=True)
             self.set_action(ac)
+
+        if self.done:
+            self.env.grasp()
 
     def test_loop(self, loop_num: int):
         for _ in range(loop_num):
