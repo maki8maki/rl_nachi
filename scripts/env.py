@@ -303,7 +303,7 @@ class NachiEnv:
         try:
             client = rospy.ServiceProxy(service_name, service_class)
             response = client(*call_args)
-            assert response.result >= NR_E_NORMAL, f"{service_name} return error code: {response.rersult}"
+            assert response.result >= NR_E_NORMAL, f"{service_name} return error code: {response.result}"
             return response
         except rospy.ServiceException:
             rospy.logwarn(f"Service call failed: {service_name}")
