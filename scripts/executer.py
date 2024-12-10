@@ -75,7 +75,7 @@ class Executer:
         self.logging_image("depth/reconstructed", recon_imgs[3:])
         return state
 
-    def set_action(self, action: np.ndarray):
+    def set_action(self, action: np.ndarray, enbale_threshold: bool = True):
         # actionの整形など
         action = action.copy()
         action = np.clip(action, -1, 1)
@@ -85,7 +85,7 @@ class Executer:
 
         self.env.set_action(action)
 
-        if np.linalg.norm(action) / np.sqrt(6) < self.cfg.done_threshold:
+        if enbale_threshold and np.linalg.norm(action) / np.sqrt(6) < self.cfg.done_threshold:
             self.done = True
 
     def logging_image(self, tag: str, img: th.Tensor):

@@ -37,7 +37,7 @@ def main(_cfg: OmegaConf):
         try:
             state = executer.get_state()
             ac, _ = executer.rl_model.predict(th.tensor(state), deterministic=True)
-            executer.set_action(ac)
+            executer.set_action(ac, enbale_threshold=False)
             images.append(executer.get_image())
             poses.append(executer.get_robot_state().copy())
         except AssertionError as e:
