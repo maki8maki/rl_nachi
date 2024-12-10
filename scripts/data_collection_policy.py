@@ -31,6 +31,8 @@ def main(_cfg: OmegaConf):
     images = []
     poses = []
 
+    executer.env.set_initial_position()
+
     while len(images) < 100:
         try:
             state = executer.get_state()

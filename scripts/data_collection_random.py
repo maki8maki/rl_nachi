@@ -24,6 +24,8 @@ def main():
     images = []
     poses = []
 
+    env.set_initial_position()
+
     while len(images) < 100:
         try:
             env.set_action(np.random.uniform(-1.0, 1.0, (6,)))
