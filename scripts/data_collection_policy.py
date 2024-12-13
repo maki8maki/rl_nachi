@@ -26,6 +26,7 @@ def main(_cfg: OmegaConf):
     del _cfg, cfg
 
     if not yes_no_input():
+        executer.close()
         exit()
 
     images = []
