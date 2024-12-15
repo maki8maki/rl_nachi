@@ -156,7 +156,12 @@ class SB3Executer(Executer):
             self.set_action(ac)
 
         if self.done:
+            self.steps += 1
+            self.get_state()
             self.env.grasp()
+
+        self.steps += 1
+        self.get_state()
 
     def test_loop(self, loop_num: int):
         for _ in range(loop_num):
