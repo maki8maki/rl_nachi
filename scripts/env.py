@@ -46,8 +46,8 @@ IMAGE_WIDTH = 848
 IMAGE_HEIGHT = 480
 
 # マニピュレータの制限に関する定数
-SHIFT_MIN = np.array([200.0, -150.0, 300.0, -30.0, -30.0, -30.0])  # mm, deg
-# SHIFT_MIN = np.array([200.0, -150.0, 350.0, -30.0, -30.0, -30.0])  # mm, deg
+SHIFT_MIN = np.array([200.0, -150.0, 310.0, -30.0, -30.0, -30.0])  # mm, deg
+# SHIFT_MIN = np.array([200.0, -150.0, 330.0, -30.0, -30.0, -30.0])  # mm, deg
 SHIFT_MAX = np.array([600.0, 150.0, 450.0, 30.0, 50.0, 30.0])  # mm, deg
 
 
@@ -192,7 +192,7 @@ class NachiEnv:
         rot_ctrl *= np.deg2rad(10)  # rad
 
         # 目標の計算
-        pos_cur, quat_cur = self.tool_pose[:3], self.tool_pose[3:]
+        pos_cur, quat_cur = self.tool_pose[:3].copy(), self.tool_pose[3:].copy()
         pos_target = pos_cur + pos_ctrl
         mat_target = rot.add_rot_mat(rot.euler2mat(quat_cur), rot.euler2mat(rot_ctrl))
         rot_target = rot.mat2euler(mat_target)
