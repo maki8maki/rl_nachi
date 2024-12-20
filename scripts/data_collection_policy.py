@@ -10,6 +10,7 @@ import torch as th
 from config.config import SB3Config
 from executer import SB3Executer
 from omegaconf import OmegaConf
+from tqdm import tqdm
 from utils import yes_no_input
 
 
@@ -34,16 +35,18 @@ def main(_cfg: OmegaConf):
 
     executer.env.set_initial_position()
 
-    while len(images) < 100:
-        try:
-            state = executer.get_state()
-            ac, _ = executer.rl_model.predict(th.tensor(state), deterministic=True)
-            executer.set_action(ac, enbale_threshold=False)
-            images.append(executer.get_image())
-            poses.append(executer.get_robot_state().copy())
-        except AssertionError as e:
-            print(e)
-            executer.env.set_initial_position()
+    with tqdm(total=300) as pbar:
+        while len(images) < 300:
+            try:
+                state = executer.get_state()
+                ac, _ = executer.rl_model.predict(th.tensor(state), deterministic=True)
+                executer.set_action(ac, enbale_threshold=False)
+                images.append(executer.get_image())
+                poses.append(executer.get_robot_state().copy())
+                pbar.update(1)
+            except AssertionError as e:
+                print(e)
+                executer.env.set_initial_position()
 
     dirs = os.path.join(os.path.dirname(__file__), "data", now)
     os.makedirs(dirs, exist_ok=True)
