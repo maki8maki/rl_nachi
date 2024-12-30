@@ -35,8 +35,10 @@ def main(_cfg: OmegaConf):
 
     executer.env.set_initial_position()
 
-    with tqdm(total=300) as pbar:
-        while len(images) < 300:
+    size = 100
+
+    with tqdm(total=size) as pbar:
+        while len(images) < size:
             try:
                 state = executer.get_state()
                 ac, _ = executer.rl_model.predict(th.tensor(state), deterministic=True)
