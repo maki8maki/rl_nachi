@@ -46,9 +46,12 @@ IMAGE_WIDTH = 848
 IMAGE_HEIGHT = 480
 
 # マニピュレータの制限に関する定数
-SHIFT_MIN = np.array([200.0, -150.0, 310.0, -30.0, -30.0, -30.0])  # mm, deg
-# SHIFT_MIN = np.array([200.0, -150.0, 330.0, -30.0, -30.0, -30.0])  # mm, deg
-SHIFT_MAX = np.array([600.0, 150.0, 450.0, 30.0, 50.0, 30.0])  # mm, deg
+SHIFT_MIN = np.array([200.0, -150.0, 310.0, -30.0, -30.0, -30.0])  # mm, deg # 本動作
+# SHIFT_MIN = np.array([200.0, -150.0, 320.0, -30.0, -30.0, -30.0])  # mm, deg # データ収集
+SHIFT_MAX = np.array([400.0, 150.0, 450.0, 30.0, 50.0, 30.0])  # mm, deg
+
+# その他の定数
+Z_DIFF = -0.006  # mm
 
 
 class NachiEnv:
@@ -204,7 +207,7 @@ class NachiEnv:
         # 指令の送信
         self.set_position_action(target)
 
-    def grasp(self, z_diff=-0.002):
+    def grasp(self, z_diff=Z_DIFF):
         self.update_robot_state()
         diff = np.array([0.0, 0.0, z_diff])
         mat = rot.euler2mat(self.tool_pose[3:])
