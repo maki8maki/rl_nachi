@@ -27,7 +27,7 @@ def main(_cfg: OmegaConf):
         executer.close()
         exit()
 
-    executer.test(15)
+    executer()
 
 
 if __name__ == "__main__":
