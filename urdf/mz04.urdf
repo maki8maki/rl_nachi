@@ -197,7 +197,7 @@
 
     <link name="tool_link" />
     <joint name="tool_joint" type="fixed">
-        <origin rpy="-3.141592 0 0" xyz="0.085 0 0.049" />
+        <origin rpy="-3.141592 0 0" xyz="0.095 0 0.049" />
         <parent link="flange_link" />
         <child link="tool_link" />
     </joint>
