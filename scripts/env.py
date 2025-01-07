@@ -188,8 +188,8 @@ class NachiEnv:
 
         # unscale
         pos_ctrl, rot_ctrl = action[:3], action[3:]
-        pos_ctrl *= 0.05  # m
-        rot_ctrl *= np.deg2rad(10)  # rad
+        pos_ctrl *= 0.01  # m
+        rot_ctrl *= np.deg2rad(5)  # rad
 
         # 目標の計算
         pos_cur, quat_cur = self.tool_pose[:3].copy(), self.tool_pose[3:].copy()
