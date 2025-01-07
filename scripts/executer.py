@@ -83,10 +83,10 @@ class Executer:
 
         self.writer.add_tensor("action", th.tensor(action, dtype=th.float), self.steps)
 
-        self.env.set_action(action)
-
         if enbale_threshold and np.linalg.norm(action) / np.sqrt(6) < self.cfg.done_threshold:
             self.done = True
+        else:
+            self.env.set_action(action)
 
     def logging_image(self, tag: str, img: th.Tensor):
         self.writer.add_image(tag, img * 0.5 + 0.5, self.steps)
