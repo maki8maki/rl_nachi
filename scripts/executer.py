@@ -1,4 +1,5 @@
 import os
+import time
 
 import numpy as np
 import torch as th
@@ -149,16 +150,23 @@ class SB3Executer(Executer):
         self.rl_model = self.cfg.model
 
     def main_loop(self):
+        t = []
+        s2 = time.time()
         while (not self.done) and self.steps < self.cfg.max_steps:
             self.steps += 1
+            start = time.time()
             state = self.get_state()  # Agent用の状態を取得
             ac, _ = self.rl_model.predict(th.tensor(state), deterministic=True)
+            t.append(time.time() - start)
             self.set_action(ac)
 
         if self.done:
             self.steps += 1
             self.get_state()
             self.env.grasp()
+            print(f"total time          : {s2 - time.time()}")
+            print(f"mean processing time: {np.mean(t)}")
+            time.sleep(3)
 
         self.steps += 1
         self.get_state()
