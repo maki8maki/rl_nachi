@@ -22,6 +22,7 @@ git clone git@github.com:maki8maki/rl_nachi.git
 
 ```bash
 cd ~/catkin_ws
+pip install -r src/rl_nachi/requirements.txt
 rosdep install -i --from-paths src/ -y
 catkin build
 ```
